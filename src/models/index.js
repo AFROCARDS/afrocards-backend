@@ -18,7 +18,10 @@ const Explication = require('./Explication');
 
 // 3. Jeu
 const ModeJeu = require('./ModeJeu');
+const SousModeJeu = require('./SousModeJeu');
 const Partie = require('./Partie');
+const Niveau = require('./Niveau');
+const ProgressionNiveau = require('./ProgressionNiveau');
 
 // 4. Marketing (Partenaires)
 const ChallengeSponsorise = require('./ChallengeSponsorise');
@@ -120,6 +123,16 @@ const defineAssociations = () => {
     otherKey: 'idQuestion'
   });
 
+  // 7b. CATÉGORIE ↔ QUESTION (1:N) - Association directe
+  Categorie.hasMany(Question, {
+    foreignKey: 'idCategorie',
+    as: 'questionsDirectes'
+  });
+  Question.belongsTo(Categorie, {
+    foreignKey: 'idCategorie',
+    as: 'categorieDirecte'
+  });
+
   // ========== PARTIES ==========
 
   // 8. JOUEUR ↔ PARTIE (1:N)
@@ -145,6 +158,44 @@ const defineAssociations = () => {
   });
   Partie.belongsTo(ModeJeu, {
     foreignKey: 'idMode'
+  });
+
+  // 10b. MODEJEU ↔ NIVEAU (1:N)
+  ModeJeu.hasMany(Niveau, {
+    foreignKey: 'idMode',
+    onDelete: 'CASCADE'
+  });
+  Niveau.belongsTo(ModeJeu, {
+    foreignKey: 'idMode'
+  });
+
+  // 10e. MODEJEU ↔ SOUSMODEJEU (1:N)
+  ModeJeu.hasMany(SousModeJeu, {
+    foreignKey: 'idMode',
+    as: 'sousModes',
+    onDelete: 'CASCADE'
+  });
+  SousModeJeu.belongsTo(ModeJeu, {
+    foreignKey: 'idMode',
+    as: 'modeJeu'
+  });
+
+  // 10c. JOUEUR ↔ PROGRESSIONNIVEAU (1:N)
+  Joueur.hasMany(ProgressionNiveau, {
+    foreignKey: 'idJoueur',
+    onDelete: 'CASCADE'
+  });
+  ProgressionNiveau.belongsTo(Joueur, {
+    foreignKey: 'idJoueur'
+  });
+
+  // 10d. NIVEAU ↔ PROGRESSIONNIVEAU (1:N)
+  Niveau.hasMany(ProgressionNiveau, {
+    foreignKey: 'idNiveau',
+    onDelete: 'CASCADE'
+  });
+  ProgressionNiveau.belongsTo(Niveau, {
+    foreignKey: 'idNiveau'
   });
 
   // ========== PARTENAIRES & MARKETING ==========
@@ -339,7 +390,10 @@ module.exports = {
   Explication,
   // Modèles Jeu
   ModeJeu,
+  SousModeJeu,
   Partie,
+  Niveau,
+  ProgressionNiveau,
   // Modèles Marketing
   ChallengeSponsorise,
   Promotion,

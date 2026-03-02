@@ -7,17 +7,15 @@ const Joueur = sequelize.define('Joueur', {
     primaryKey: true,
     autoIncrement: true
   },
-  // In Joueur.js
-
-idUtilisateur: {
-  type: DataTypes.INTEGER,
-  allowNull: false,
-  unique: true,
-  references: {
-    model: 'utilisateurs', // This matches the table name
-    key: 'id_utilisateur'  // CHANGE THIS: from 'idUtilisateur' to 'id_utilisateur'
-  }
-},
+  idUtilisateur: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    unique: true,
+    references: {
+      model: 'utilisateurs',
+      key: 'id_utilisateur'
+    }
+  },
   pseudo: {
     type: DataTypes.STRING(50),
     allowNull: false,
@@ -58,6 +56,43 @@ idUtilisateur: {
       min: 1
     }
   },
+  // Champs de progression
+  pointsXP: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    validate: { min: 0 }
+  },
+  coins: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    validate: { min: 0 }
+  },
+  vies: {
+    type: DataTypes.INTEGER,
+    defaultValue: 5,
+    validate: { min: 0, max: 5 }
+  },
+  niveauActuel: {
+    type: DataTypes.STRING(50),
+    defaultValue: 'Stage 1'
+  },
+  maxNiveauDebloque: {
+    type: DataTypes.INTEGER,
+    defaultValue: 1,
+    validate: { min: 1 }
+  },
+  partiesJouees: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0
+  },
+  partiesGagnees: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0
+  },
+  derniereRegenerationVie: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
   bio: {
     type: DataTypes.TEXT,
     allowNull: true
@@ -74,7 +109,7 @@ idUtilisateur: {
   tableName: 'joueurs',
   timestamps: true,
   createdAt: 'dateInscription',
-  updatedAt: false
+  updatedAt: 'updatedAt'
 });
 
 module.exports = Joueur;

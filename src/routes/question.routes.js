@@ -175,4 +175,163 @@ router.put('/:id', questionController.updateQuestion);
  */
 router.delete('/:id', questionController.deleteQuestion);
 
+// ========== ROUTES POUR LE JEU ==========
+
+/**
+ * @swagger
+ * /questions/stats:
+ *   get:
+ *     summary: Statistiques des questions
+ *     tags: [Questions]
+ *     responses:
+ *       200:
+ *         description: Statistiques récupérées avec succès
+ */
+router.get('/stats', questionController.getQuestionsStats);
+
+/**
+ * @swagger
+ * /questions/random:
+ *   get:
+ *     summary: Récupérer des questions aléatoires (mode Fiesta)
+ *     tags: [Questions]
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: difficulte
+ *         schema:
+ *           type: string
+ *           enum: [facile, moyen, difficile]
+ *       - in: query
+ *         name: idCategorie
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Questions aléatoires récupérées
+ */
+router.get('/random', questionController.getRandomQuestions);
+
+/**
+ * @swagger
+ * /questions/category/{idCategorie}:
+ *   get:
+ *     summary: Récupérer des questions par catégorie
+ *     tags: [Questions]
+ *     parameters:
+ *       - in: path
+ *         name: idCategorie
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: difficulte
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: Questions récupérées avec succès
+ */
+router.get('/category/:idCategorie', questionController.getQuestionsByCategory);
+
+/**
+ * @swagger
+ * /questions/level/{levelNumber}:
+ *   get:
+ *     summary: Récupérer des questions pour un niveau (mode Stage)
+ *     tags: [Questions]
+ *     parameters:
+ *       - in: path
+ *         name: levelNumber
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: idCategorie
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Questions pour le niveau récupérées
+ */
+router.get('/level/:levelNumber', questionController.getQuestionsForLevel);
+
+/**
+ * @swagger
+ * /questions/{idQuestion}/explication:
+ *   get:
+ *     summary: Récupérer l'explication d'une question
+ *     tags: [Questions]
+ *     parameters:
+ *       - in: path
+ *         name: idQuestion
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Explication récupérée avec succès
+ *       404:
+ *         description: Question non trouvée
+ */
+router.get('/:idQuestion/explication', questionController.getQuestionExplication);
+
+/**
+ * @swagger
+ * /questions/{idQuestion}/verify:
+ *   post:
+ *     summary: Vérifier une réponse
+ *     tags: [Questions]
+ *     parameters:
+ *       - in: path
+ *         name: idQuestion
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               idReponse:
+ *                 type: integer
+ *               tempsReponse:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Réponse vérifiée
+ */
+router.post('/:idQuestion/verify', questionController.verifyAnswer);
+
+/**
+ * @swagger
+ * /questions/{idQuestion}:
+ *   get:
+ *     summary: Récupérer une question par son ID
+ *     tags: [Questions]
+ *     parameters:
+ *       - in: path
+ *         name: idQuestion
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Question récupérée
+ *       404:
+ *         description: Question non trouvée
+ */
+router.get('/:idQuestion', questionController.getQuestionById);
+
 module.exports = router;

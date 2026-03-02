@@ -9,6 +9,8 @@ const reponseRoutes = require('./reponse.routes');
 const explicationRoutes = require('./explication.routes');
 const categorieRoutes = require('./categorie.routes');
 const modeJeuRoutes = require('./modeJeu.routes');
+const sousModeRoutes = require('./sousMode.routes');
+const niveauRoutes = require('./niveau.routes');
 const partieRoutes = require('./partie.routes');
 const classementRoutes = require('./classement.routes');
 const adminRoutes = require('./admin.routes');
@@ -19,6 +21,7 @@ const gamificationRoutes = require('./gamification.routes'); // <-- AJOUT
 const gameplayRoutes = require('./gameplay.routes');
 const uploadRoutes = require('./upload.routes');
 const passwordRoutes = require('./password.routes');
+const resultRoutes = require('./result.routes');
 
 // Utiliser les routes
 router.use('/auth', authRoutes);
@@ -28,6 +31,8 @@ router.use('/reponses', reponseRoutes);
 router.use('/explications', explicationRoutes);
 router.use('/categories', categorieRoutes);
 router.use('/modes', modeJeuRoutes);
+router.use('/sous-modes', sousModeRoutes);
+router.use('/niveaux', niveauRoutes);
 router.use('/parties', partieRoutes);
 router.use('/classement', classementRoutes);
 router.use('/admin', adminRoutes);
@@ -38,6 +43,7 @@ router.use('/gamification', gamificationRoutes); // <-- AJOUT
 router.use('/gameplay', gameplayRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/password', passwordRoutes);
+router.use('/results', resultRoutes);
 
 // Route de test API
 router.get('/health', (req, res) => {

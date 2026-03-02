@@ -37,11 +37,19 @@ const verifyToken = async (req, res, next) => {
       });
     }
 
+    // Récupérer l'ID du joueur si c'est un joueur
+    let idJoueur = null;
+    if (utilisateur.typeUtilisateur === 'joueur') {
+      const joueur = await Joueur.findOne({ where: { idUtilisateur: utilisateur.idUtilisateur } });
+      idJoueur = joueur?.idJoueur;
+    }
+
     // Ajouter les infos utilisateur à la requête
     req.user = {
       id: utilisateur.idUtilisateur,
       email: utilisateur.email,
-      type: utilisateur.typeUtilisateur
+      type: utilisateur.typeUtilisateur,
+      idJoueur: idJoueur
     };
 
     next();
@@ -81,7 +89,45 @@ const checkRole = (...roles) => {
   };
 };
 
+// Middleware optionnel - ne bloque pas si pas de token, mais ajoute l'utilisateur si présent
+const optionalAuth = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      // Pas de token, on continue sans authentification
+      return next();
+    }
+
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const utilisateur = await Utilisateur.findByPk(decoded.id);
+
+    if (utilisateur && utilisateur.statutCompte === 'actif') {
+      // Récupérer l'ID du joueur si c'est un joueur
+      let idJoueur = null;
+      if (utilisateur.typeUtilisateur === 'joueur') {
+        const joueur = await Joueur.findOne({ where: { idUtilisateur: utilisateur.idUtilisateur } });
+        idJoueur = joueur?.idJoueur;
+      }
+
+      req.user = {
+        id: utilisateur.idUtilisateur,
+        email: utilisateur.email,
+        type: utilisateur.typeUtilisateur,
+        idJoueur: idJoueur
+      };
+    }
+
+    next();
+  } catch (error) {
+    // En cas d'erreur (token invalide/expiré), on continue sans authentification
+    next();
+  }
+};
+
 module.exports = {
   verifyToken,
-  checkRole
+  checkRole,
+  optionalAuth
 };

@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 5000;
 
 // Synchroniser la DB au démarrage (en dev uniquement)
 if (process.env.NODE_ENV === 'development') {
-  syncDatabase({ alter: true });
+  syncDatabase({ alter: false }); // Changed from alter: true to avoid ER_TOO_MANY_KEYS
 }
 
 // Middlewares
