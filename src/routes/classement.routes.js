@@ -7,7 +7,7 @@ const { verifyToken } = require('../middlewares/auth.middleware');
  * @swagger
  * tags:
  *   - name: Classement
- *     description: Classements global, par pays et classement personnel
+ *     description: Classements global, mensuel, amis, par pays et classement personnel
  */
 
 router.use(verifyToken); // Protection globale des routes
@@ -16,7 +16,7 @@ router.use(verifyToken); // Protection globale des routes
  * @swagger
  * /classement/global:
  *   get:
- *     summary: Récupérer le classement global des meilleurs joueurs
+ *     summary: Récupérer le classement global des meilleurs joueurs (par XP total)
  *     tags: [Classement]
  *     security:
  *       - bearerAuth: []
@@ -25,7 +25,7 @@ router.use(verifyToken); // Protection globale des routes
  *         name: limit
  *         schema:
  *           type: integer
- *           default: 20
+ *           default: 50
  *         description: Nombre de joueurs à retourner
  *     responses:
  *       200:
@@ -34,6 +34,48 @@ router.use(verifyToken); // Protection globale des routes
  *         description: Paramètres invalides
  */
 router.get('/global', classementController.getGlobalLeaderboard);
+
+/**
+ * @swagger
+ * /classement/mensuel:
+ *   get:
+ *     summary: Récupérer le classement du mois en cours
+ *     tags: [Classement]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Nombre de joueurs à retourner
+ *     responses:
+ *       200:
+ *         description: Classement mensuel retourné
+ */
+router.get('/mensuel', classementController.getMonthlyLeaderboard);
+
+/**
+ * @swagger
+ * /classement/amis:
+ *   get:
+ *     summary: Récupérer le classement des amis (basé sur le pays pour le moment)
+ *     tags: [Classement]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Nombre de joueurs à retourner
+ *     responses:
+ *       200:
+ *         description: Classement amis retourné
+ */
+router.get('/amis', classementController.getFriendsLeaderboard);
 
 /**
  * @swagger
@@ -68,7 +110,7 @@ router.get('/pays/:pays', classementController.getCountryLeaderboard);
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Position retournée
+ *         description: Position retournée avec infos complètes
  *       404:
  *         description: Joueur introuvable
  */
