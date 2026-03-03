@@ -22,6 +22,7 @@ const gameplayRoutes = require('./gameplay.routes');
 const uploadRoutes = require('./upload.routes');
 const passwordRoutes = require('./password.routes');
 const resultRoutes = require('./result.routes');
+const challengeRoutes = require('./challenge.routes');
 
 // Utiliser les routes
 router.use('/auth', authRoutes);
@@ -44,6 +45,7 @@ router.use('/gameplay', gameplayRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/password', passwordRoutes);
 router.use('/results', resultRoutes);
+router.use('/challenges', challengeRoutes);
 
 // Route de test API
 router.get('/health', (req, res) => {
@@ -65,7 +67,8 @@ router.get('/health', (req, res) => {
       partenaires: '✅',
       economie: '✅',
       social: '✅',
-      gamification: '✅ NOUVEAU' // <-- AJOUT
+      gamification: '✅ NOUVEAU', // <-- AJOUT
+      challenges: '✅ NOUVEAU'
     }
   });
 });

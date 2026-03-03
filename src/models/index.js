@@ -22,6 +22,7 @@ const SousModeJeu = require('./SousModeJeu');
 const Partie = require('./Partie');
 const Niveau = require('./Niveau');
 const ProgressionNiveau = require('./ProgressionNiveau');
+const Challenge = require('./Challenge');
 
 // 4. Marketing (Partenaires)
 const ChallengeSponsorise = require('./ChallengeSponsorise');
@@ -196,6 +197,41 @@ const defineAssociations = () => {
   });
   ProgressionNiveau.belongsTo(Niveau, {
     foreignKey: 'idNiveau'
+  });
+
+  // ========== CHALLENGES (PvP) ==========
+
+  // JOUEUR ↔ CHALLENGE (1:N) - Joueur 1
+  Joueur.hasMany(Challenge, {
+    foreignKey: 'idJoueur1',
+    as: 'challengesInities',
+    onDelete: 'CASCADE'
+  });
+  Challenge.belongsTo(Joueur, {
+    foreignKey: 'idJoueur1',
+    as: 'joueur1'
+  });
+
+  // JOUEUR ↔ CHALLENGE (1:N) - Joueur 2
+  Joueur.hasMany(Challenge, {
+    foreignKey: 'idJoueur2',
+    as: 'challengesRecus',
+    onDelete: 'SET NULL'
+  });
+  Challenge.belongsTo(Joueur, {
+    foreignKey: 'idJoueur2',
+    as: 'joueur2'
+  });
+
+  // JOUEUR ↔ CHALLENGE (1:N) - Gagnant
+  Joueur.hasMany(Challenge, {
+    foreignKey: 'idGagnant',
+    as: 'challengesGagnes',
+    onDelete: 'SET NULL'
+  });
+  Challenge.belongsTo(Joueur, {
+    foreignKey: 'idGagnant',
+    as: 'gagnant'
   });
 
   // ========== PARTENAIRES & MARKETING ==========
@@ -394,6 +430,7 @@ module.exports = {
   Partie,
   Niveau,
   ProgressionNiveau,
+  Challenge,
   // Modèles Marketing
   ChallengeSponsorise,
   Promotion,
