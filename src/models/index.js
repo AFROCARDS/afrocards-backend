@@ -1,3 +1,4 @@
+const Article = require('./Article');
 const sequelize = require('../config/database');
 
 // ==========================================
@@ -450,4 +451,7 @@ module.exports = {
   Message,
   Notification,
   NotificationParametre
+  ,
+  // Modèle Boutique
+  Article
 };

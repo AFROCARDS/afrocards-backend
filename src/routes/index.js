@@ -16,6 +16,7 @@ const classementRoutes = require('./classement.routes');
 const adminRoutes = require('./admin.routes');
 const partenaireRoutes = require('./partenaire.routes');
 const economieRoutes = require('./economie.routes');
+const boutiqueRoutes = require('./boutique.routes');
 const socialRoutes = require('./social.routes');
 const gamificationRoutes = require('./gamification.routes'); // <-- AJOUT
 const gameplayRoutes = require('./gameplay.routes');
@@ -39,6 +40,7 @@ router.use('/classement', classementRoutes);
 router.use('/admin', adminRoutes);
 router.use('/partenaires', partenaireRoutes);
 router.use('/economie', economieRoutes);
+router.use('/boutique', boutiqueRoutes);
 router.use('/social', socialRoutes);
 router.use('/gamification', gamificationRoutes); // <-- AJOUT
 router.use('/gameplay', gameplayRoutes);
