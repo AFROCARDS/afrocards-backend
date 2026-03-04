@@ -1,4 +1,4 @@
-const { Joueur, Message, Notification, NotificationParametre, sequelize } = require('../models');
+const { Joueur, Message, Notification, NotificationParametre, Signalement, SignalementQuestion, sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 // Helper pour récupérer l'ID joueur courant
@@ -197,5 +197,62 @@ exports.markAllAsRead = async (req, res) => {
       message: 'Erreur opération', 
       error: error.message 
     });
+  }
+};
+
+// Signaler un joueur
+exports.signalerJoueur = async (req, res) => {
+  try {
+    const idSignaleur = await getJoueurId(req.user.id);
+    const { idSignale, motif, details } = req.body;
+    if (!idSignale || !motif) {
+      return res.status(400).json({ success: false, message: 'Champs requis manquants.' });
+    }
+    if (idSignaleur === idSignale) {
+      return res.status(400).json({ success: false, message: 'Impossible de se signaler soi-même.' });
+    }
+    // Vérifier que le joueur signalé existe
+    const joueur = await Joueur.findByPk(idSignale);
+    if (!joueur) {
+      return res.status(404).json({ success: false, message: 'Joueur à signaler introuvable.' });
+    }
+    // Créer le signalement
+    const signalement = await Signalement.create({
+      idSignaleur,
+      idSignale,
+      motif,
+      details
+    });
+    res.status(201).json({ success: true, message: 'Signalement enregistré', data: signalement });
+  } catch (error) {
+    console.error('Erreur signalement joueur:', error);
+    res.status(500).json({ success: false, message: 'Erreur lors du signalement', error: error.message });
+  }
+};
+
+// Signaler une question
+exports.signalerQuestion = async (req, res) => {
+  try {
+    const idSignaleur = await getJoueurId(req.user.id);
+    const { idQuestion, motif, details } = req.body;
+    if (!idQuestion || !motif) {
+      return res.status(400).json({ success: false, message: 'Champs requis manquants.' });
+    }
+    // Vérifier que la question existe
+    const question = await require('../models/Question').findByPk(idQuestion);
+    if (!question) {
+      return res.status(404).json({ success: false, message: 'Question introuvable.' });
+    }
+    // Créer le signalement
+    const signalement = await SignalementQuestion.create({
+      idSignaleur,
+      idQuestion,
+      motif,
+      details
+    });
+    res.status(201).json({ success: true, message: 'Signalement de question enregistré', data: signalement });
+  } catch (error) {
+    console.error('Erreur signalement question:', error);
+    res.status(500).json({ success: false, message: 'Erreur lors du signalement', error: error.message });
   }
 };

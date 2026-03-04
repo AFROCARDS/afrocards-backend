@@ -46,6 +46,8 @@ const HistoriqueTransaction = require('./HistoriqueTransaction');
 const Message = require('./Message');
 const Notification = require('./Notification');
 const NotificationParametre = require('./NotificationParametre');
+const Signalement = require('./Signalement');
+const SignalementQuestion = require('./SignalementQuestion');
 
 // ==========================================
 // DÉFINITION DES ASSOCIATIONS
@@ -275,7 +277,7 @@ const defineAssociations = () => {
     foreignKey: 'idJoueur'
   });
 
-  // 15. JOUEUR ↔ POINTSVIE (1:1)
+  // 15. JOUEUR ↔ pointSVIE (1:1)
   Joueur.hasOne(PointsVie, {
     foreignKey: 'idJoueur',
     onDelete: 'CASCADE'
@@ -395,6 +397,18 @@ const defineAssociations = () => {
     foreignKey: 'idJoueur'
   });
 
+  // 27. JOUEUR ↔ SIGNALEMENT (N:N)
+  Joueur.hasMany(Signalement, { foreignKey: 'idSignaleur', as: 'signalementsFaits' });
+  Joueur.hasMany(Signalement, { foreignKey: 'idSignale', as: 'signalementsRecus' });
+  Signalement.belongsTo(Joueur, { foreignKey: 'idSignaleur', as: 'signaleur' });
+  Signalement.belongsTo(Joueur, { foreignKey: 'idSignale', as: 'signale' });
+
+  // 28. JOUEUR ↔ SIGNALEMENTQUESTION (N:N)
+  Joueur.hasMany(SignalementQuestion, { foreignKey: 'idSignaleur', as: 'signalementsQuestionsFaits' });
+  SignalementQuestion.belongsTo(Joueur, { foreignKey: 'idSignaleur', as: 'signaleur' });
+  Question.hasMany(SignalementQuestion, { foreignKey: 'idQuestion', as: 'signalements' });
+  SignalementQuestion.belongsTo(Question, { foreignKey: 'idQuestion', as: 'question' });
+
   console.log('✅ Associations définies (avec Module Social et Gamification complète)');
 };
 
@@ -450,8 +464,9 @@ module.exports = {
   // Modèles Social
   Message,
   Notification,
-  NotificationParametre
-  ,
+  NotificationParametre,
+  Signalement,
+  SignalementQuestion,
   // Modèle Boutique
   Article
 };

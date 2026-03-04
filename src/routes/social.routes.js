@@ -208,4 +208,74 @@ router.put('/notifications/read-all', socialController.markAllAsRead);
  */
 router.put('/preferences', socialValidator.updateNotificationSettings, validate, socialController.updatePreferences);
 
+/**
+ * @swagger
+ * /social/report:
+ *   post:
+ *     summary: Signaler un joueur
+ *     tags: [Social]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - idSignale
+ *               - motif
+ *             properties:
+ *               idSignale:
+ *                 type: integer
+ *                 example: 2
+ *               motif:
+ *                 type: string
+ *                 example: "Langage inapproprié"
+ *               details:
+ *                 type: string
+ *                 example: "Ce joueur a utilisé des insultes dans le chat."
+ *     responses:
+ *       201:
+ *         description: Signalement enregistré
+ *       400:
+ *         description: Données invalides
+ */
+router.post('/report', socialController.signalerJoueur);
+
+/**
+ * @swagger
+ * /social/report-question:
+ *   post:
+ *     summary: Signaler une question (erreur, explication, etc.)
+ *     tags: [Social]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - idQuestion
+ *               - motif
+ *             properties:
+ *               idQuestion:
+ *                 type: integer
+ *                 example: 123
+ *               motif:
+ *                 type: string
+ *                 example: "Erreur sur la réponse"
+ *               details:
+ *                 type: string
+ *                 example: "La bonne réponse n'est pas correcte."
+ *     responses:
+ *       201:
+ *         description: Signalement enregistré
+ *       400:
+ *         description: Données invalides
+ */
+router.post('/report-question', socialController.signalerQuestion);
+
 module.exports = router;
