@@ -71,10 +71,50 @@ idMode: {
     type: DataTypes.STRING(50),
     allowNull: true,
     comment: 'Stage, Fiesta, Défi, etc.'
+  },
+  xpGagne: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    comment: 'XP gagné pour cette partie'
+  },
+  coinsGagnes: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    comment: 'Coins gagnés pour cette partie'
+  },
+  idAdversaire: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'joueurs',
+      key: 'id_joueur'
+    },
+    comment: 'ID du joueur adversaire (pour duels/challenges)'
+  },
+  nomAdversaire: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+    comment: 'Nom de l\'adversaire ou du challenge'
+  },
+  niveauStage: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    comment: 'Numéro du stage joué'
+  },
+  bonnesReponses: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    comment: 'Nombre de bonnes réponses'
+  },
+  totalQuestions: {
+    type: DataTypes.INTEGER,
+    defaultValue: 10,
+    comment: 'Nombre total de questions'
   }
 }, {
   tableName: 'parties',
-  timestamps: true
+  timestamps: true,
+  underscored: true
 });
 
 module.exports = Partie;

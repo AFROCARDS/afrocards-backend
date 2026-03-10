@@ -137,9 +137,9 @@ exports.saveResults = async (req, res) => {
 exports.getResultsHistory = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { limit = 20, offset = 0 } = req.query;
+    const { limit = 50, offset = 0 } = req.query;
 
-    const joueur = await Joueur.findOne({ where: { idUser: userId } });
+    const joueur = await Joueur.findOne({ where: { idUtilisateur: userId } });
     if (!joueur) {
       return res.status(404).json({
         success: false,
@@ -150,24 +150,49 @@ exports.getResultsHistory = async (req, res) => {
     const parties = await Partie.findAndCountAll({
       where: { 
         idJoueur: joueur.idJoueur,
-        estTerminee: true
+        statut: 'termine'
       },
-      order: [['datePartie', 'DESC']],
+      include: [
+        {
+          model: Joueur,
+          as: 'adversaire',
+          attributes: ['idJoueur', 'pseudo', 'avatarURL'],
+          required: false
+        }
+      ],
+      order: [['dateFin', 'DESC'], ['dateDebut', 'DESC']],
       limit: parseInt(limit),
       offset: parseInt(offset)
     });
 
+    // Formatter les données pour le frontend
+    const formattedData = parties.rows.map(partie => ({
+      idPartie: partie.idPartie,
+      modeJeu: partie.modeJeu || 'Stage',
+      datePartie: partie.dateFin || partie.dateDebut,
+      score: partie.score || 0,
+      bonnesReponses: partie.bonnesReponses || 0,
+      totalQuestions: partie.totalQuestions || 10,
+      xpGagne: partie.xpGagne || 0,
+      coinsGagnes: partie.coinsGagnes || 0,
+      niveauStage: partie.niveauStage || null,
+      nomAdversaire: partie.adversaire?.pseudo || partie.nomAdversaire || null,
+      avatarAdversaire: partie.adversaire?.avatarURL || null,
+      idAdversaire: partie.idAdversaire || null
+    }));
+
     res.json({
       success: true,
       count: parties.count,
-      data: parties.rows
+      data: formattedData
     });
 
   } catch (error) {
     console.error('Erreur getResultsHistory:', error);
     res.status(500).json({
       success: false,
-      message: 'Erreur lors de la récupération de l\'historique'
+      message: 'Erreur lors de la récupération de l\'historique',
+      error: error.message
     });
   }
 };

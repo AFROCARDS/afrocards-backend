@@ -149,6 +149,12 @@ const defineAssociations = () => {
     foreignKey: 'idJoueur'
   });
 
+  // Association pour l'adversaire (Partie -> Joueur)
+  Partie.belongsTo(Joueur, {
+    foreignKey: 'idAdversaire',
+    as: 'adversaire'
+  });
+
   // 9. QUIZ ↔ PARTIE (1:N)
   Quiz.hasMany(Partie, {
     foreignKey: 'idQuiz'
