@@ -55,13 +55,22 @@ async function seedHistorique() {
       }]
     });
 
-    // Récupérer un quiz existant
-    const quiz = await Quiz.findOne();
+    // Récupérer ou créer un quiz
+    let quiz = await Quiz.findOne();
     if (!quiz) {
       console.log('⚠️ Aucun quiz trouvé, création d\'un quiz par défaut...');
+      quiz = await Quiz.create({
+        titre: 'Quiz Général AfroCards',
+        description: 'Quiz de culture générale africaine',
+        difficulte: 'moyen',
+        langue: 'fr',
+        duree: 300,
+        statut: 'actif'
+      });
+      console.log(`✅ Quiz créé avec ID: ${quiz.idQuiz}`);
     }
 
-    const quizId = quiz?.idQuiz || 1;
+    const quizId = quiz.idQuiz;
 
     console.log(`\n📊 Création de l'historique pour ${joueurs.length} joueur(s)...`);
 
