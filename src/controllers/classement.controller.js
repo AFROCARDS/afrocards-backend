@@ -1,4 +1,4 @@
-const { Joueur, Utilisateur, Partie, sequelize } = require('../models');
+const { Joueur, Utilisateur, Partie, Ami, sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 // Helper pour récupérer l'ID joueur courant
@@ -176,7 +176,7 @@ exports.getMonthlyLeaderboard = async (req, res) => {
   }
 };
 
-// 3. Classement des amis (basé sur le pays pour le moment)
+// 3. Classement des amis (vrais amis depuis la table amis)
 exports.getFriendsLeaderboard = async (req, res) => {
   try {
     const { limit = 50 } = req.query;
@@ -186,20 +186,47 @@ exports.getFriendsLeaderboard = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Non authentifié' });
     }
 
-    // Récupérer le joueur courant pour avoir son pays
+    // Récupérer le joueur courant
     const monJoueur = await Joueur.findOne({ where: { idUtilisateur: userId } });
     if (!monJoueur) {
       return res.status(404).json({ success: false, message: 'Joueur introuvable' });
     }
 
-    // Pour le moment, on utilise le classement par pays comme "amis"
-    // À terme, on pourrait implémenter un vrai système d'amis
-    const whereClause = monJoueur.pays ? { pays: monJoueur.pays } : {};
+    const monId = monJoueur.idJoueur;
 
+    // Récupérer les IDs des amis (amitiés acceptées)
+    const amities = await Ami.findAll({
+      where: {
+        [Op.or]: [
+          { idJoueur1: monId },
+          { idJoueur2: monId }
+        ],
+        statut: 'accepte'
+      },
+      attributes: ['idJoueur1', 'idJoueur2']
+    });
+
+    // Extraire les IDs des amis (l'autre joueur dans chaque amitié)
+    const amisIds = amities.map(a => a.idJoueur1 === monId ? a.idJoueur2 : a.idJoueur1);
+    
+    // Ajouter l'utilisateur courant à la liste pour qu'il apparaisse dans le classement
+    amisIds.push(monId);
+
+    if (amisIds.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: [],
+        message: 'Aucun ami trouvé'
+      });
+    }
+
+    // Récupérer les joueurs amis triés par XP
     const joueurs = await Joueur.findAll({
-      attributes: ['idJoueur', 'pseudo', 'avatarURL', 'pointsXP', 'niveau', 'pays'],
-      where: whereClause,
-      order: [['pointsXP', 'DESC']],
+      attributes: ['idJoueur', 'pseudo', 'avatarURL', 'pointsXP', 'niveau', 'pays', 'niveauStage', 'totalXP'],
+      where: {
+        idJoueur: { [Op.in]: amisIds }
+      },
+      order: [['totalXP', 'DESC'], ['pointsXP', 'DESC']],
       limit: parseInt(limit)
     });
 
@@ -208,11 +235,11 @@ exports.getFriendsLeaderboard = async (req, res) => {
       idJoueur: joueur.idJoueur,
       pseudo: joueur.pseudo,
       avatarURL: joueur.avatarURL,
-      xpTotal: joueur.pointsXP || 0,
-      niveau: formatNiveau(joueur.niveau),
+      xpTotal: joueur.totalXP || joueur.pointsXP || 0,
+      niveau: formatNiveau(joueur.niveauStage || joueur.niveau),
       badge: 'Emeraude',
       pays: joueur.pays,
-      isCurrentUser: joueur.idJoueur === monJoueur.idJoueur
+      isCurrentUser: joueur.idJoueur === monId
     }));
 
     res.status(200).json({

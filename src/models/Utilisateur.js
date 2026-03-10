@@ -48,7 +48,7 @@ resetPasswordExpiry: {
   allowNull: true
 },
   typeUtilisateur: {
-    type: DataTypes.ENUM('joueur', 'partenaire', 'admin'),
+    type: DataTypes.ENUM('joueur', 'partenaire', 'admin', 'bot'),
     allowNull: false
   }
 }, {
