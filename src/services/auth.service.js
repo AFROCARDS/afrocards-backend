@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { Utilisateur, Joueur, Partenaire, Coin, PointsVie, XP } = require('../models');
+const { Utilisateur, Joueur, Partenaire, Coin, PointsVie, XP, Ami } = require('../models');
 
 class AuthService {
   // Générer un token JWT
@@ -61,7 +61,21 @@ class AuthService {
         idUtilisateur: utilisateur.idUtilisateur,
         pseudo,
         age,
-        pays
+        pays,
+        avatarURL: 'assets/images/avatars/default.png',
+        scoreTotal: 0,
+        niveau: 1,
+        pointsXP: 0,
+        totalXP: 0,
+        niveauStage: 1,
+        coins: 100,
+        vies: 5,
+        niveauActuel: 'Stage 1',
+        maxNiveauDebloque: 1,
+        partiesJouees: 0,
+        partiesGagnees: 0,
+        statutPremium: false,
+        xpBoostMultiplier: 1
       });
 
       // Initialiser les ressources du joueur
@@ -81,6 +95,32 @@ class AuthService {
           xpProchainNiveau: 100
         })
       ]);
+
+      // Ajouter les bots comme amis automatiquement
+      try {
+        const bots = await Joueur.findAll({
+          include: [{
+            model: Utilisateur,
+            where: { typeUtilisateur: 'bot' }
+          }]
+        });
+        
+        for (const bot of bots) {
+          await Ami.findOrCreate({
+            where: {
+              idJoueur1: bot.idJoueur,
+              idJoueur2: profil.idJoueur
+            },
+            defaults: {
+              statut: 'accepte',
+              dateReponse: new Date()
+            }
+          });
+        }
+      } catch (botError) {
+        console.error('Erreur ajout bots comme amis:', botError.message);
+        // On ne bloque pas l'inscription si les bots échouent
+      }
     } else if (typeUtilisateur === 'partenaire') {
       profil = await Partenaire.create({
         idUtilisateur: utilisateur.idUtilisateur,
