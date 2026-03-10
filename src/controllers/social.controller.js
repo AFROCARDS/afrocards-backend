@@ -709,7 +709,7 @@ exports.getProfilJoueur = async (req, res) => {
         {
           model: Trophee,
           as: 'trophees',
-          attributes: ['idTrophee', 'nom', 'description', 'icone', 'rarete'],
+          attributes: ['idTrophee', 'nom', 'description', 'icone', 'rareté'],
           through: { attributes: ['dateObtention'] }
         }
       ]
