@@ -222,11 +222,11 @@ exports.getFriendsLeaderboard = async (req, res) => {
 
     // Récupérer les joueurs amis triés par XP
     const joueurs = await Joueur.findAll({
-      attributes: ['idJoueur', 'pseudo', 'avatarURL', 'pointsXP', 'niveau', 'pays', 'niveauStage', 'totalXP'],
+      attributes: ['idJoueur', 'pseudo', 'avatarURL', 'pointsXP', 'niveauActuel', 'pays'],
       where: {
         idJoueur: { [Op.in]: amisIds }
       },
-      order: [['totalXP', 'DESC'], ['pointsXP', 'DESC']],
+      order: [['pointsXP', 'DESC']],
       limit: parseInt(limit)
     });
 
@@ -235,8 +235,8 @@ exports.getFriendsLeaderboard = async (req, res) => {
       idJoueur: joueur.idJoueur,
       pseudo: joueur.pseudo,
       avatarURL: joueur.avatarURL,
-      xpTotal: joueur.totalXP || joueur.pointsXP || 0,
-      niveau: formatNiveau(joueur.niveauStage || joueur.niveau),
+      xpTotal: joueur.pointsXP || 0,
+      niveau: formatNiveau(joueur.niveauActuel),
       badge: 'Emeraude',
       pays: joueur.pays,
       isCurrentUser: joueur.idJoueur === monId

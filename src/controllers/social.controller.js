@@ -279,12 +279,12 @@ exports.getMesAmis = async (req, res) => {
         { 
           model: Joueur, 
           as: 'demandeur', 
-          attributes: ['idJoueur', 'pseudo', 'avatarURL', 'totalXP', 'niveau', 'niveauStage'] 
+          attributes: ['idJoueur', 'pseudo', 'avatarURL', 'pointsXP', 'niveauActuel'] 
         },
         { 
           model: Joueur, 
           as: 'destinataire', 
-          attributes: ['idJoueur', 'pseudo', 'avatarURL', 'totalXP', 'niveau', 'niveauStage'] 
+          attributes: ['idJoueur', 'pseudo', 'avatarURL', 'pointsXP', 'niveauActuel'] 
         }
       ]
     });
@@ -294,12 +294,12 @@ exports.getMesAmis = async (req, res) => {
       const ami = amitie.idJoueur1 === monId ? amitie.destinataire : amitie.demandeur;
       return {
         idAmitie: amitie.idAmitie,
-        idJoueur: ami.idJoueur,
-        pseudo: ami.pseudo,
-        avatarURL: ami.avatarURL,
-        totalXP: ami.totalXP,
-        niveau: ami.niveau,
-        niveauStage: ami.niveauStage,
+        idJoueur: ami?.idJoueur,
+        pseudo: ami?.pseudo,
+        avatarURL: ami?.avatarURL,
+        totalXP: ami?.pointsXP || 0,
+        niveau: ami?.niveauActuel || 1,
+        niveauStage: 1,
         dateAmitie: amitie.dateReponse
       };
     });
@@ -325,7 +325,7 @@ exports.getDemandesRecues = async (req, res) => {
         { 
           model: Joueur, 
           as: 'demandeur', 
-          attributes: ['idJoueur', 'pseudo', 'avatarURL', 'totalXP', 'niveau'] 
+          attributes: ['idJoueur', 'pseudo', 'avatarURL', 'pointsXP', 'niveauActuel'] 
         }
       ],
       order: [['dateEnvoi', 'DESC']]
@@ -333,7 +333,13 @@ exports.getDemandesRecues = async (req, res) => {
 
     const data = demandes.map(d => ({
       idAmitie: d.idAmitie,
-      demandeur: d.demandeur,
+      demandeur: {
+        idJoueur: d.demandeur?.idJoueur,
+        pseudo: d.demandeur?.pseudo,
+        avatarURL: d.demandeur?.avatarURL,
+        totalXP: d.demandeur?.pointsXP || 0,
+        niveau: d.demandeur?.niveauActuel || 1
+      },
       dateEnvoi: d.dateEnvoi
     }));
 
@@ -358,7 +364,7 @@ exports.getDemandesEnvoyees = async (req, res) => {
         { 
           model: Joueur, 
           as: 'destinataire', 
-          attributes: ['idJoueur', 'pseudo', 'avatarURL', 'totalXP', 'niveau'] 
+          attributes: ['idJoueur', 'pseudo', 'avatarURL', 'pointsXP', 'niveauActuel'] 
         }
       ],
       order: [['dateEnvoi', 'DESC']]
@@ -366,7 +372,13 @@ exports.getDemandesEnvoyees = async (req, res) => {
 
     const data = demandes.map(d => ({
       idAmitie: d.idAmitie,
-      destinataire: d.destinataire,
+      destinataire: {
+        idJoueur: d.destinataire?.idJoueur,
+        pseudo: d.destinataire?.pseudo,
+        avatarURL: d.destinataire?.avatarURL,
+        totalXP: d.destinataire?.pointsXP || 0,
+        niveau: d.destinataire?.niveauActuel || 1
+      },
       dateEnvoi: d.dateEnvoi
     }));
 
@@ -608,7 +620,7 @@ exports.rechercherJoueurs = async (req, res) => {
           [Op.ne]: monId // Exclure moi-même
         }
       },
-      attributes: ['idJoueur', 'pseudo', 'avatarURL', 'totalXP', 'niveau'],
+      attributes: ['idJoueur', 'pseudo', 'avatarURL', 'pointsXP', 'niveauActuel'],
       limit: 20
     });
 
@@ -623,8 +635,13 @@ exports.rechercherJoueurs = async (req, res) => {
         }
       });
 
+      const joueurData = joueur.toJSON();
       return {
-        ...joueur.toJSON(),
+        idJoueur: joueurData.idJoueur,
+        pseudo: joueurData.pseudo,
+        avatarURL: joueurData.avatarURL,
+        totalXP: joueurData.pointsXP || 0,
+        niveau: joueurData.niveauActuel || 1,
         statut: relation ? relation.statut : 'inconnu',
         estDemandeur: relation ? relation.idJoueur1 === monId : false
       };

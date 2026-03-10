@@ -62,6 +62,18 @@ const Joueur = sequelize.define('Joueur', {
     defaultValue: 0,
     validate: { min: 0 }
   },
+  totalXP: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    validate: { min: 0 },
+    comment: 'XP total cumulé depuis toujours'
+  },
+  niveauStage: {
+    type: DataTypes.INTEGER,
+    defaultValue: 1,
+    validate: { min: 1 },
+    comment: 'Numéro du stage actuel (1, 2, 3...)'
+  },
   coins: {
     type: DataTypes.INTEGER,
     defaultValue: 0,
