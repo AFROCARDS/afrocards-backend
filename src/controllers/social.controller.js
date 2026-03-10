@@ -84,7 +84,19 @@ exports.getConversation = async (req, res) => {
       ]
     });
 
-    res.status(200).json({ success: true, data: messages });
+    // Ajouter le champ isMe pour faciliter l'affichage côté frontend
+    const formattedMessages = messages.map(msg => ({
+      idMessage: msg.idMessage,
+      idExpediteur: msg.idExpediteur,
+      idDestinataire: msg.idDestinataire,
+      contenu: msg.contenu,
+      dateEnvoi: msg.dateEnvoi,
+      lu: msg.lu,
+      expediteur: msg.expediteur,
+      isMe: msg.idExpediteur === monId
+    }));
+
+    res.status(200).json({ success: true, data: formattedMessages });
   } catch (error) {
     console.error('Erreur récupération conversation:', error);
     res.status(500).json({ success: false, message: 'Erreur récupération conversation', error: error.message });
