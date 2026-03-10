@@ -1,4 +1,4 @@
-const { Joueur, Message, Notification, NotificationParametre, Signalement, SignalementQuestion, sequelize } = require('../models');
+const { Joueur, Message, Notification, NotificationParametre, Signalement, SignalementQuestion, Ami, sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 // Helper pour récupérer l'ID joueur courant
@@ -254,5 +254,407 @@ exports.signalerQuestion = async (req, res) => {
   } catch (error) {
     console.error('Erreur signalement question:', error);
     res.status(500).json({ success: false, message: 'Erreur lors du signalement', error: error.message });
+  }
+};
+
+// ==========================================
+// GESTION DES AMIS
+// ==========================================
+
+// Récupérer la liste de mes amis
+exports.getMesAmis = async (req, res) => {
+  try {
+    const monId = await getJoueurId(req.user.id);
+    
+    // Récupérer les amitiés acceptées où je suis impliqué
+    const amities = await Ami.findAll({
+      where: {
+        [Op.or]: [
+          { idJoueur1: monId },
+          { idJoueur2: monId }
+        ],
+        statut: 'accepte'
+      },
+      include: [
+        { 
+          model: Joueur, 
+          as: 'demandeur', 
+          attributes: ['idJoueur', 'pseudo', 'avatarURL', 'totalXP', 'niveau', 'niveauStage'] 
+        },
+        { 
+          model: Joueur, 
+          as: 'destinataire', 
+          attributes: ['idJoueur', 'pseudo', 'avatarURL', 'totalXP', 'niveau', 'niveauStage'] 
+        }
+      ]
+    });
+
+    // Transformer pour n'avoir que les infos des amis (pas moi)
+    const amis = amities.map(amitie => {
+      const ami = amitie.idJoueur1 === monId ? amitie.destinataire : amitie.demandeur;
+      return {
+        idAmitie: amitie.idAmitie,
+        idJoueur: ami.idJoueur,
+        pseudo: ami.pseudo,
+        avatarURL: ami.avatarURL,
+        totalXP: ami.totalXP,
+        niveau: ami.niveau,
+        niveauStage: ami.niveauStage,
+        dateAmitie: amitie.dateReponse
+      };
+    });
+
+    res.status(200).json({ success: true, data: amis, count: amis.length });
+  } catch (error) {
+    console.error('Erreur récupération amis:', error);
+    res.status(500).json({ success: false, message: 'Erreur récupération amis', error: error.message });
+  }
+};
+
+// Récupérer les demandes d'amis en attente (reçues)
+exports.getDemandesRecues = async (req, res) => {
+  try {
+    const monId = await getJoueurId(req.user.id);
+    
+    const demandes = await Ami.findAll({
+      where: {
+        idJoueur2: monId,
+        statut: 'en_attente'
+      },
+      include: [
+        { 
+          model: Joueur, 
+          as: 'demandeur', 
+          attributes: ['idJoueur', 'pseudo', 'avatarURL', 'totalXP', 'niveau'] 
+        }
+      ],
+      order: [['dateEnvoi', 'DESC']]
+    });
+
+    const data = demandes.map(d => ({
+      idAmitie: d.idAmitie,
+      demandeur: d.demandeur,
+      dateEnvoi: d.dateEnvoi
+    }));
+
+    res.status(200).json({ success: true, data, count: data.length });
+  } catch (error) {
+    console.error('Erreur récupération demandes:', error);
+    res.status(500).json({ success: false, message: 'Erreur récupération demandes', error: error.message });
+  }
+};
+
+// Récupérer les demandes envoyées
+exports.getDemandesEnvoyees = async (req, res) => {
+  try {
+    const monId = await getJoueurId(req.user.id);
+    
+    const demandes = await Ami.findAll({
+      where: {
+        idJoueur1: monId,
+        statut: 'en_attente'
+      },
+      include: [
+        { 
+          model: Joueur, 
+          as: 'destinataire', 
+          attributes: ['idJoueur', 'pseudo', 'avatarURL', 'totalXP', 'niveau'] 
+        }
+      ],
+      order: [['dateEnvoi', 'DESC']]
+    });
+
+    const data = demandes.map(d => ({
+      idAmitie: d.idAmitie,
+      destinataire: d.destinataire,
+      dateEnvoi: d.dateEnvoi
+    }));
+
+    res.status(200).json({ success: true, data, count: data.length });
+  } catch (error) {
+    console.error('Erreur récupération demandes envoyées:', error);
+    res.status(500).json({ success: false, message: 'Erreur', error: error.message });
+  }
+};
+
+// Envoyer une demande d'ami
+exports.envoyerDemandeAmi = async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const monId = await getJoueurId(req.user.id);
+    const { idJoueur } = req.body;
+
+    if (!idJoueur) {
+      return res.status(400).json({ success: false, message: 'ID joueur requis' });
+    }
+
+    if (monId === idJoueur) {
+      return res.status(400).json({ success: false, message: 'Impossible de s\'ajouter soi-même' });
+    }
+
+    // Vérifier que le joueur existe
+    const joueur = await Joueur.findByPk(idJoueur);
+    if (!joueur) {
+      return res.status(404).json({ success: false, message: 'Joueur introuvable' });
+    }
+
+    // Vérifier si une relation existe déjà
+    const existingRelation = await Ami.findOne({
+      where: {
+        [Op.or]: [
+          { idJoueur1: monId, idJoueur2: idJoueur },
+          { idJoueur1: idJoueur, idJoueur2: monId }
+        ]
+      }
+    });
+
+    if (existingRelation) {
+      if (existingRelation.statut === 'accepte') {
+        return res.status(400).json({ success: false, message: 'Vous êtes déjà amis' });
+      } else if (existingRelation.statut === 'en_attente') {
+        return res.status(400).json({ success: false, message: 'Une demande est déjà en attente' });
+      } else if (existingRelation.statut === 'bloque') {
+        return res.status(400).json({ success: false, message: 'Impossible d\'ajouter ce joueur' });
+      }
+      // Si refuse, on peut renvoyer une demande - supprimer l'ancienne
+      await existingRelation.destroy({ transaction: t });
+    }
+
+    // Créer la demande
+    const demande = await Ami.create({
+      idJoueur1: monId,
+      idJoueur2: idJoueur,
+      statut: 'en_attente',
+      dateEnvoi: new Date()
+    }, { transaction: t });
+
+    // Créer une notification pour le destinataire
+    const monProfil = await Joueur.findByPk(monId, { attributes: ['pseudo'] });
+    await Notification.create({
+      idJoueur: idJoueur,
+      type: 'ami',
+      titre: 'Demande d\'ami',
+      contenu: `${monProfil.pseudo} vous a envoyé une demande d'ami`,
+      canal: 'in-app'
+    }, { transaction: t });
+
+    await t.commit();
+    res.status(201).json({ success: true, message: 'Demande envoyée', data: demande });
+  } catch (error) {
+    await t.rollback();
+    console.error('Erreur envoi demande ami:', error);
+    res.status(500).json({ success: false, message: 'Erreur envoi demande', error: error.message });
+  }
+};
+
+// Accepter une demande d'ami
+exports.accepterDemandeAmi = async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const monId = await getJoueurId(req.user.id);
+    const { idAmitie } = req.params;
+
+    const demande = await Ami.findOne({
+      where: {
+        idAmitie,
+        idJoueur2: monId,
+        statut: 'en_attente'
+      }
+    });
+
+    if (!demande) {
+      return res.status(404).json({ success: false, message: 'Demande introuvable ou déjà traitée' });
+    }
+
+    await demande.update({
+      statut: 'accepte',
+      dateReponse: new Date()
+    }, { transaction: t });
+
+    // Notifier le demandeur
+    const monProfil = await Joueur.findByPk(monId, { attributes: ['pseudo'] });
+    await Notification.create({
+      idJoueur: demande.idJoueur1,
+      type: 'ami',
+      titre: 'Demande acceptée',
+      contenu: `${monProfil.pseudo} a accepté votre demande d'ami`,
+      canal: 'in-app'
+    }, { transaction: t });
+
+    await t.commit();
+    res.status(200).json({ success: true, message: 'Demande acceptée' });
+  } catch (error) {
+    await t.rollback();
+    console.error('Erreur acceptation demande:', error);
+    res.status(500).json({ success: false, message: 'Erreur acceptation', error: error.message });
+  }
+};
+
+// Refuser une demande d'ami
+exports.refuserDemandeAmi = async (req, res) => {
+  try {
+    const monId = await getJoueurId(req.user.id);
+    const { idAmitie } = req.params;
+
+    const demande = await Ami.findOne({
+      where: {
+        idAmitie,
+        idJoueur2: monId,
+        statut: 'en_attente'
+      }
+    });
+
+    if (!demande) {
+      return res.status(404).json({ success: false, message: 'Demande introuvable' });
+    }
+
+    await demande.update({
+      statut: 'refuse',
+      dateReponse: new Date()
+    });
+
+    res.status(200).json({ success: true, message: 'Demande refusée' });
+  } catch (error) {
+    console.error('Erreur refus demande:', error);
+    res.status(500).json({ success: false, message: 'Erreur refus', error: error.message });
+  }
+};
+
+// Supprimer un ami
+exports.supprimerAmi = async (req, res) => {
+  try {
+    const monId = await getJoueurId(req.user.id);
+    const { idAmitie } = req.params;
+
+    const amitie = await Ami.findOne({
+      where: {
+        idAmitie,
+        [Op.or]: [
+          { idJoueur1: monId },
+          { idJoueur2: monId }
+        ],
+        statut: 'accepte'
+      }
+    });
+
+    if (!amitie) {
+      return res.status(404).json({ success: false, message: 'Amitié introuvable' });
+    }
+
+    await amitie.destroy();
+
+    res.status(200).json({ success: true, message: 'Ami supprimé' });
+  } catch (error) {
+    console.error('Erreur suppression ami:', error);
+    res.status(500).json({ success: false, message: 'Erreur suppression', error: error.message });
+  }
+};
+
+// Bloquer un joueur
+exports.bloquerJoueur = async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const monId = await getJoueurId(req.user.id);
+    const { idJoueur } = req.body;
+
+    if (!idJoueur || monId === idJoueur) {
+      return res.status(400).json({ success: false, message: 'ID joueur invalide' });
+    }
+
+    // Supprimer toute relation existante
+    await Ami.destroy({
+      where: {
+        [Op.or]: [
+          { idJoueur1: monId, idJoueur2: idJoueur },
+          { idJoueur1: idJoueur, idJoueur2: monId }
+        ]
+      },
+      transaction: t
+    });
+
+    // Créer un blocage
+    await Ami.create({
+      idJoueur1: monId,
+      idJoueur2: idJoueur,
+      statut: 'bloque',
+      dateEnvoi: new Date()
+    }, { transaction: t });
+
+    await t.commit();
+    res.status(200).json({ success: true, message: 'Joueur bloqué' });
+  } catch (error) {
+    await t.rollback();
+    console.error('Erreur blocage:', error);
+    res.status(500).json({ success: false, message: 'Erreur blocage', error: error.message });
+  }
+};
+
+// Rechercher des joueurs
+exports.rechercherJoueurs = async (req, res) => {
+  try {
+    const monId = await getJoueurId(req.user.id);
+    const { pseudo } = req.query;
+
+    if (!pseudo || pseudo.length < 2) {
+      return res.status(400).json({ success: false, message: 'Pseudo trop court (min 2 caractères)' });
+    }
+
+    const joueurs = await Joueur.findAll({
+      where: {
+        pseudo: {
+          [Op.like]: `%${pseudo}%`
+        },
+        idJoueur: {
+          [Op.ne]: monId // Exclure moi-même
+        }
+      },
+      attributes: ['idJoueur', 'pseudo', 'avatarURL', 'totalXP', 'niveau'],
+      limit: 20
+    });
+
+    // Pour chaque joueur, vérifier le statut de relation
+    const joueursAvecStatut = await Promise.all(joueurs.map(async (joueur) => {
+      const relation = await Ami.findOne({
+        where: {
+          [Op.or]: [
+            { idJoueur1: monId, idJoueur2: joueur.idJoueur },
+            { idJoueur1: joueur.idJoueur, idJoueur2: monId }
+          ]
+        }
+      });
+
+      return {
+        ...joueur.toJSON(),
+        statut: relation ? relation.statut : 'inconnu',
+        estDemandeur: relation ? relation.idJoueur1 === monId : false
+      };
+    }));
+
+    res.status(200).json({ success: true, data: joueursAvecStatut });
+  } catch (error) {
+    console.error('Erreur recherche joueurs:', error);
+    res.status(500).json({ success: false, message: 'Erreur recherche', error: error.message });
+  }
+};
+
+// Obtenir le nombre d'amis d'un joueur
+exports.getNombreAmis = async (req, res) => {
+  try {
+    const monId = await getJoueurId(req.user.id);
+    
+    const count = await Ami.count({
+      where: {
+        [Op.or]: [
+          { idJoueur1: monId },
+          { idJoueur2: monId }
+        ],
+        statut: 'accepte'
+      }
+    });
+
+    res.status(200).json({ success: true, count });
+  } catch (error) {
+    console.error('Erreur comptage amis:', error);
+    res.status(500).json({ success: false, message: 'Erreur', error: error.message });
   }
 };

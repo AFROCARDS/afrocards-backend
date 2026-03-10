@@ -48,6 +48,7 @@ const Notification = require('./Notification');
 const NotificationParametre = require('./NotificationParametre');
 const Signalement = require('./Signalement');
 const SignalementQuestion = require('./SignalementQuestion');
+const Ami = require('./Ami');
 
 // ==========================================
 // DÉFINITION DES ASSOCIATIONS
@@ -409,6 +410,26 @@ const defineAssociations = () => {
   Question.hasMany(SignalementQuestion, { foreignKey: 'idQuestion', as: 'signalements' });
   SignalementQuestion.belongsTo(Question, { foreignKey: 'idQuestion', as: 'question' });
 
+  // 29. JOUEUR ↔ AMI (Système d'amitié)
+  Joueur.hasMany(Ami, {
+    foreignKey: 'idJoueur1',
+    as: 'demandesEnvoyees',
+    onDelete: 'CASCADE'
+  });
+  Joueur.hasMany(Ami, {
+    foreignKey: 'idJoueur2',
+    as: 'demandesRecues',
+    onDelete: 'CASCADE'
+  });
+  Ami.belongsTo(Joueur, {
+    foreignKey: 'idJoueur1',
+    as: 'demandeur'
+  });
+  Ami.belongsTo(Joueur, {
+    foreignKey: 'idJoueur2',
+    as: 'destinataire'
+  });
+
   console.log('✅ Associations définies (avec Module Social et Gamification complète)');
 };
 
@@ -467,6 +488,7 @@ module.exports = {
   NotificationParametre,
   Signalement,
   SignalementQuestion,
+  Ami,
   // Modèle Boutique
   Article
 };

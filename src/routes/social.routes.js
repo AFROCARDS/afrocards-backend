@@ -278,4 +278,196 @@ router.post('/report', socialController.signalerJoueur);
  */
 router.post('/report-question', socialController.signalerQuestion);
 
+// ==========================================
+// ROUTES GESTION DES AMIS
+// ==========================================
+
+/**
+ * @swagger
+ * /social/amis:
+ *   get:
+ *     summary: Récupérer ma liste d'amis
+ *     tags: [Social]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des amis
+ */
+router.get('/amis', socialController.getMesAmis);
+
+/**
+ * @swagger
+ * /social/amis/demandes/recues:
+ *   get:
+ *     summary: Récupérer les demandes d'amis reçues
+ *     tags: [Social]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des demandes reçues
+ */
+router.get('/amis/demandes/recues', socialController.getDemandesRecues);
+
+/**
+ * @swagger
+ * /social/amis/demandes/envoyees:
+ *   get:
+ *     summary: Récupérer les demandes d'amis envoyées
+ *     tags: [Social]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des demandes envoyées
+ */
+router.get('/amis/demandes/envoyees', socialController.getDemandesEnvoyees);
+
+/**
+ * @swagger
+ * /social/amis/count:
+ *   get:
+ *     summary: Obtenir le nombre d'amis
+ *     tags: [Social]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Nombre d'amis
+ */
+router.get('/amis/count', socialController.getNombreAmis);
+
+/**
+ * @swagger
+ * /social/amis/demande:
+ *   post:
+ *     summary: Envoyer une demande d'ami
+ *     tags: [Social]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - idJoueur
+ *             properties:
+ *               idJoueur:
+ *                 type: integer
+ *                 example: 5
+ *     responses:
+ *       201:
+ *         description: Demande envoyée
+ */
+router.post('/amis/demande', socialController.envoyerDemandeAmi);
+
+/**
+ * @swagger
+ * /social/amis/{idAmitie}/accepter:
+ *   put:
+ *     summary: Accepter une demande d'ami
+ *     tags: [Social]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: idAmitie
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Demande acceptée
+ */
+router.put('/amis/:idAmitie/accepter', socialController.accepterDemandeAmi);
+
+/**
+ * @swagger
+ * /social/amis/{idAmitie}/refuser:
+ *   put:
+ *     summary: Refuser une demande d'ami
+ *     tags: [Social]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: idAmitie
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Demande refusée
+ */
+router.put('/amis/:idAmitie/refuser', socialController.refuserDemandeAmi);
+
+/**
+ * @swagger
+ * /social/amis/{idAmitie}:
+ *   delete:
+ *     summary: Supprimer un ami
+ *     tags: [Social]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: idAmitie
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Ami supprimé
+ */
+router.delete('/amis/:idAmitie', socialController.supprimerAmi);
+
+/**
+ * @swagger
+ * /social/amis/bloquer:
+ *   post:
+ *     summary: Bloquer un joueur
+ *     tags: [Social]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - idJoueur
+ *             properties:
+ *               idJoueur:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Joueur bloqué
+ */
+router.post('/amis/bloquer', socialController.bloquerJoueur);
+
+/**
+ * @swagger
+ * /social/joueurs/rechercher:
+ *   get:
+ *     summary: Rechercher des joueurs par pseudo
+ *     tags: [Social]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: pseudo
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Pseudo à rechercher (min 2 caractères)
+ *     responses:
+ *       200:
+ *         description: Liste des joueurs trouvés
+ */
+router.get('/joueurs/rechercher', socialController.rechercherJoueurs);
+
 module.exports = router;

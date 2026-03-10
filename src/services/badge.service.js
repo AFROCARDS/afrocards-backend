@@ -31,6 +31,16 @@ exports.verifierBadges = async (joueur) => {
           if (joueur.scoreTotal >= badge.conditionValeur) conditionRemplie = true;
           break;
         
+        case 'xp_total':
+          // Vérifier le total XP du joueur
+          if (joueur.totalXP >= badge.conditionValeur) conditionRemplie = true;
+          break;
+        
+        case 'niveau_stage':
+          // Vérifier le niveau de stage du joueur
+          if (joueur.niveauStage >= badge.conditionValeur) conditionRemplie = true;
+          break;
+        
         case 'parties_jouees':
           const nbParties = await Partie.count({ where: { idJoueur: joueur.idJoueur, statut: 'termine' } });
           if (nbParties >= badge.conditionValeur) conditionRemplie = true;
@@ -55,7 +65,7 @@ exports.verifierBadges = async (joueur) => {
         
         // Bonus XP du badge
         if (badge.recompenseXP > 0) {
-          await joueur.increment('scoreTotal', { by: badge.recompenseXP });
+          await joueur.increment('totalXP', { by: badge.recompenseXP });
         }
 
         nouveauxBadges.push(badge);

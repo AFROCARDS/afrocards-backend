@@ -1,5 +1,10 @@
 const { Sequelize } = require('sequelize');
 
+// Charger dotenv si pas déjà fait (pour les tests ou scripts isolés)
+if (!process.env.DB_NAME) {
+  require('dotenv').config();
+}
+
 // Création de l'instance Sequelize
 const sequelize = new Sequelize(
   process.env.DB_NAME,
