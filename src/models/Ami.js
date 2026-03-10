@@ -45,10 +45,12 @@ const Ami = sequelize.define('Ami', {
 }, {
   tableName: 'amis',
   timestamps: true,
+  underscored: true,
   indexes: [
     {
       unique: true,
-      fields: ['idJoueur1', 'idJoueur2']
+      fields: ['id_joueur1', 'id_joueur2'],
+      name: 'unique_friendship'
     }
   ]
 });
