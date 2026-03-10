@@ -253,4 +253,7 @@ router.get('/profil', verifyToken, authController.getProfil);
  */
 router.post('/deconnexion', verifyToken, authController.deconnexion);
 
+// PUT /auth/profil - Modifier le profil
+router.put('/profil', verifyToken, authController.updateProfil);
+
 module.exports = router;

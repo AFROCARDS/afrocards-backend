@@ -102,6 +102,96 @@ class AuthController {
       });
     }
   }
+
+  // Modifier le profil de l'utilisateur connecté
+  async updateProfil(req, res) {
+    try {
+      const { Utilisateur, Joueur } = require('../models');
+      const bcrypt = require('bcryptjs');
+      
+      const { pseudo, age, nationalite, pays, avatarURL, motDePasse, ancienMotDePasse, bio } = req.body;
+
+      const utilisateur = await Utilisateur.findByPk(req.user.id);
+      if (!utilisateur) {
+        return res.status(404).json({
+          success: false,
+          message: 'Utilisateur non trouvé'
+        });
+      }
+
+      // Si changement de mot de passe, vérifier l'ancien
+      if (motDePasse && ancienMotDePasse) {
+        const isMatch = await bcrypt.compare(ancienMotDePasse, utilisateur.motDePasse);
+        if (!isMatch) {
+          return res.status(400).json({
+            success: false,
+            message: 'Ancien mot de passe incorrect'
+          });
+        }
+        const salt = await bcrypt.genSalt(10);
+        utilisateur.motDePasse = await bcrypt.hash(motDePasse, salt);
+        await utilisateur.save();
+      }
+
+      // Mettre à jour le profil joueur
+      if (utilisateur.typeUtilisateur === 'joueur') {
+        const joueur = await Joueur.findOne({
+          where: { idUtilisateur: utilisateur.idUtilisateur }
+        });
+
+        if (joueur) {
+          if (pseudo) {
+            // Vérifier que le pseudo n'est pas déjà pris
+            const existingPseudo = await Joueur.findOne({ 
+              where: { 
+                pseudo,
+                idJoueur: { [require('sequelize').Op.ne]: joueur.idJoueur }
+              } 
+            });
+            if (existingPseudo) {
+              return res.status(400).json({
+                success: false,
+                message: 'Ce pseudo est déjà utilisé'
+              });
+            }
+            joueur.pseudo = pseudo;
+          }
+          if (age !== undefined) joueur.age = age;
+          if (nationalite) joueur.nationalite = nationalite;
+          if (pays) joueur.pays = pays;
+          if (avatarURL) joueur.avatarURL = avatarURL;
+          if (bio !== undefined) joueur.bio = bio;
+          
+          await joueur.save();
+
+          return res.status(200).json({
+            success: true,
+            message: 'Profil mis à jour avec succès',
+            data: {
+              idJoueur: joueur.idJoueur,
+              pseudo: joueur.pseudo,
+              age: joueur.age,
+              nationalite: joueur.nationalite,
+              pays: joueur.pays,
+              avatarURL: joueur.avatarURL,
+              bio: joueur.bio
+            }
+          });
+        }
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Profil mis à jour'
+      });
+    } catch (error) {
+      console.error('Erreur updateProfil:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
 }
 
 module.exports = new AuthController();
