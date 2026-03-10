@@ -101,6 +101,20 @@ const Joueur = sequelize.define('Joueur', {
     type: DataTypes.BOOLEAN,
     defaultValue: false
   },
+  premiumExpiration: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
+  xpBoostMultiplier: {
+    type: DataTypes.INTEGER,
+    defaultValue: 1,
+    comment: 'Multiplicateur XP actif (1 = normal, 2 = double, 3 = triple)'
+  },
+  xpBoostExpiration: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    comment: 'Date d\'expiration du boost XP'
+  },
   dateInscription: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
