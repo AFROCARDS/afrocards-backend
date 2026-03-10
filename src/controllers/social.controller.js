@@ -1,4 +1,4 @@
-const { Joueur, Message, Notification, NotificationParametre, Signalement, SignalementQuestion, Ami, sequelize } = require('../models');
+const { Joueur, Message, Notification, NotificationParametre, Signalement, SignalementQuestion, Ami, Trophee, sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 // Helper pour récupérer l'ID joueur courant
@@ -707,7 +707,7 @@ exports.getProfilJoueur = async (req, res) => {
       ],
       include: [
         {
-          model: require('../models/Trophee'),
+          model: Trophee,
           as: 'trophees',
           attributes: ['idTrophee', 'nom', 'description', 'icone', 'rarete'],
           through: { attributes: ['dateObtention'] }
