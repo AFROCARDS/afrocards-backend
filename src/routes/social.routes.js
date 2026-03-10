@@ -470,4 +470,29 @@ router.post('/amis/bloquer', socialController.bloquerJoueur);
  */
 router.get('/joueurs/rechercher', socialController.rechercherJoueurs);
 
+/**
+ * @swagger
+ * /social/joueurs/{idJoueur}/profil:
+ *   get:
+ *     summary: Voir le profil public d'un joueur
+ *     tags: [Social]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: idJoueur
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID du joueur
+ *     responses:
+ *       200:
+ *         description: Profil du joueur
+ *       404:
+ *         description: Joueur introuvable
+ *       403:
+ *         description: Profil non accessible (bloqué)
+ */
+router.get('/joueurs/:idJoueur/profil', socialController.getProfilJoueur);
+
 module.exports = router;

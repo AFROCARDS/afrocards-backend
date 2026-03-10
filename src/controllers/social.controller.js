@@ -687,3 +687,135 @@ exports.getNombreAmis = async (req, res) => {
     res.status(500).json({ success: false, message: 'Erreur', error: error.message });
   }
 };
+
+// Obtenir le profil public d'un joueur
+exports.getProfilJoueur = async (req, res) => {
+  try {
+    const monId = await getJoueurId(req.user.id);
+    const { idJoueur } = req.params;
+
+    if (!idJoueur) {
+      return res.status(400).json({ success: false, message: 'ID joueur requis' });
+    }
+
+    // Récupérer le joueur avec ses trophées
+    const joueur = await Joueur.findByPk(idJoueur, {
+      attributes: [
+        'idJoueur', 'pseudo', 'avatarURL', 'bio', 'nationalite', 
+        'pointsXP', 'totalXP', 'niveauActuel', 'niveauStage',
+        'scoreTotal', 'partiesJouees', 'partiesGagnees', 'dateInscription'
+      ],
+      include: [
+        {
+          model: require('../models/Trophee'),
+          as: 'trophees',
+          attributes: ['idTrophee', 'nom', 'description', 'icone', 'rarete'],
+          through: { attributes: ['dateObtention'] }
+        }
+      ]
+    });
+
+    if (!joueur) {
+      return res.status(404).json({ success: false, message: 'Joueur introuvable' });
+    }
+
+    // Vérifier si je suis bloqué par ce joueur ou si je l'ai bloqué
+    const blocage = await Ami.findOne({
+      where: {
+        [Op.or]: [
+          { idJoueur1: monId, idJoueur2: idJoueur, statut: 'bloque' },
+          { idJoueur1: idJoueur, idJoueur2: monId, statut: 'bloque' }
+        ]
+      }
+    });
+
+    if (blocage) {
+      return res.status(403).json({ success: false, message: 'Profil non accessible' });
+    }
+
+    // Vérifier le statut de relation
+    const relation = await Ami.findOne({
+      where: {
+        [Op.or]: [
+          { idJoueur1: monId, idJoueur2: idJoueur },
+          { idJoueur1: idJoueur, idJoueur2: monId }
+        ]
+      }
+    });
+
+    // Compter les amis du joueur
+    const nombreAmis = await Ami.count({
+      where: {
+        [Op.or]: [
+          { idJoueur1: idJoueur },
+          { idJoueur2: idJoueur }
+        ],
+        statut: 'accepte'
+      }
+    });
+
+    // Calculer le badge basé sur les XP
+    const getBadge = (xp) => {
+      if (xp >= 10000) return { nom: 'Légende', couleur: '#FFD700' };
+      if (xp >= 7500) return { nom: 'Maître', couleur: '#E040FB' };
+      if (xp >= 5000) return { nom: 'Diamant', couleur: '#00BCD4' };
+      if (xp >= 3000) return { nom: 'Platine', couleur: '#9C27B0' };
+      if (xp >= 2000) return { nom: 'Or', couleur: '#FFB74D' };
+      if (xp >= 1000) return { nom: 'Argent', couleur: '#BDBDBD' };
+      if (xp >= 500) return { nom: 'Bronze', couleur: '#CD7F32' };
+      if (xp >= 100) return { nom: 'Débutant', couleur: '#78909C' };
+      return { nom: 'Novice', couleur: '#78909C' };
+    };
+
+    const joueurData = joueur.toJSON();
+    const totalXP = joueurData.totalXP || joueurData.pointsXP || 0;
+
+    // Définir le statut d'amitié
+    let statutAmitie = 'none'; // Pas de relation
+    let idAmitie = null;
+    let estDemandeur = false;
+
+    if (relation) {
+      idAmitie = relation.idAmitie;
+      estDemandeur = relation.idJoueur1 === monId;
+      
+      if (relation.statut === 'accepte') {
+        statutAmitie = 'ami';
+      } else if (relation.statut === 'en_attente') {
+        statutAmitie = estDemandeur ? 'demande_envoyee' : 'demande_recue';
+      } else if (relation.statut === 'refuse') {
+        statutAmitie = 'none';
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        idJoueur: joueurData.idJoueur,
+        pseudo: joueurData.pseudo,
+        avatarURL: joueurData.avatarURL,
+        bio: joueurData.bio,
+        nationalite: joueurData.nationalite,
+        pointsXP: joueurData.pointsXP,
+        totalXP: totalXP,
+        niveauActuel: joueurData.niveauActuel,
+        niveauStage: joueurData.niveauStage,
+        scoreTotal: joueurData.scoreTotal,
+        partiesJouees: joueurData.partiesJouees,
+        partiesGagnees: joueurData.partiesGagnees,
+        dateInscription: joueurData.dateInscription,
+        badge: getBadge(totalXP),
+        nombreAmis: nombreAmis,
+        nombreTrophees: joueurData.trophees?.length || 0,
+        trophees: joueurData.trophees || [],
+        // Statut de relation avec moi
+        statutAmitie: statutAmitie,
+        idAmitie: idAmitie,
+        estMoi: parseInt(idJoueur) === monId
+      }
+    });
+  } catch (error) {
+    console.error('Erreur récupération profil joueur:', error);
+    res.status(500).json({ success: false, message: 'Erreur récupération profil', error: error.message });
+  }
+};
