@@ -62,7 +62,7 @@ class AuthService {
         pseudo,
         age,
         pays,
-        avatarURL: 'assets/images/avatars/default.png',
+        avatarURL: 'https://api.dicebear.com/7.x/avataaars/png?seed=AfroDefault&backgroundColor=b6e3f4',
         scoreTotal: 0,
         niveau: 1,
         pointsXP: 0,

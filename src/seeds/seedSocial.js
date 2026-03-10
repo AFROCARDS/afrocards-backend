@@ -83,14 +83,14 @@ async function seed() {
     console.log('\n📱 Création des joueurs bots...');
     
     const botUsers = [
-      { nom: 'Kwame Asante', email: 'kwame.bot@afrocards.com', pseudo: 'Kwame_Asante', pays: 'Ghana', avatarURL: '/avatars/kwame.png', pointsXP: 5000, niveau: 25 },
-      { nom: 'Amara Diallo', email: 'amara.bot@afrocards.com', pseudo: 'Amara_Diallo', pays: 'Sénégal', avatarURL: '/avatars/amara.png', pointsXP: 4200, niveau: 22 },
-      { nom: 'Zuri Okonkwo', email: 'zuri.bot@afrocards.com', pseudo: 'Zuri_Okonkwo', pays: 'Nigeria', avatarURL: '/avatars/zuri.png', pointsXP: 3800, niveau: 20 },
-      { nom: 'Fatou Ndiaye', email: 'fatou.bot@afrocards.com', pseudo: 'Fatou_Ndiaye', pays: 'Sénégal', avatarURL: '/avatars/fatou.png', pointsXP: 2500, niveau: 15 },
-      { nom: 'Kofi Mensah', email: 'kofi.bot@afrocards.com', pseudo: 'Kofi_Mensah', pays: 'Ghana', avatarURL: '/avatars/kofi.png', pointsXP: 3200, niveau: 18 },
-      { nom: 'Adama Traoré', email: 'adama.bot@afrocards.com', pseudo: 'Adama_Traore', pays: 'Mali', avatarURL: '/avatars/adama.png', pointsXP: 1800, niveau: 12 },
-      { nom: 'Mariama Sow', email: 'mariama.bot@afrocards.com', pseudo: 'Mariama_Sow', pays: 'Guinée', avatarURL: '/avatars/mariama.png', pointsXP: 1200, niveau: 8 },
-      { nom: 'Yemi Adeyemi', email: 'yemi.bot@afrocards.com', pseudo: 'Yemi_Adeyemi', pays: 'Nigeria', avatarURL: '/avatars/yemi.png', pointsXP: 2100, niveau: 14 },
+      { nom: 'Kwame Asante', email: 'kwame.bot@afrocards.com', pseudo: 'Kwame_Asante', pays: 'Ghana', avatarURL: 'https://api.dicebear.com/7.x/avataaars/png?seed=Kwame&backgroundColor=b6e3f4', pointsXP: 5000, niveau: 25, bio: 'Passionné de culture africaine 🌍 | Joueur depuis 2 ans' },
+      { nom: 'Amara Diallo', email: 'amara.bot@afrocards.com', pseudo: 'Amara_Diallo', pays: 'Sénégal', avatarURL: 'https://api.dicebear.com/7.x/avataaars/png?seed=Amara&backgroundColor=c0aede', pointsXP: 4200, niveau: 22, bio: 'Teranga toujours 🇸🇳 | Quiz master' },
+      { nom: 'Zuri Okonkwo', email: 'zuri.bot@afrocards.com', pseudo: 'Zuri_Okonkwo', pays: 'Nigeria', avatarURL: 'https://api.dicebear.com/7.x/avataaars/png?seed=Zuri&backgroundColor=d1d4f9', pointsXP: 3800, niveau: 20, bio: 'Naija to the world 🇳🇬 | History lover' },
+      { nom: 'Fatou Ndiaye', email: 'fatou.bot@afrocards.com', pseudo: 'Fatou_Ndiaye', pays: 'Sénégal', avatarURL: 'https://api.dicebear.com/7.x/lorelei/png?seed=Fatou&backgroundColor=ffd5dc', pointsXP: 2500, niveau: 15, bio: 'Apprendre en s\'amusant ✨ | Défis acceptés!' },
+      { nom: 'Kofi Mensah', email: 'kofi.bot@afrocards.com', pseudo: 'Kofi_Mensah', pays: 'Ghana', avatarURL: 'https://api.dicebear.com/7.x/avataaars/png?seed=Kofi&backgroundColor=ffdfbf', pointsXP: 3200, niveau: 18, bio: 'Akwaaba 🇬🇭 | Culture is everything' },
+      { nom: 'Adama Traoré', email: 'adama.bot@afrocards.com', pseudo: 'Adama_Traore', pays: 'Mali', avatarURL: 'https://api.dicebear.com/7.x/notionists/png?seed=Adama&backgroundColor=c1f4c5', pointsXP: 1800, niveau: 12, bio: 'Mali ka faso 🇲🇱 | Toujours prêt pour un défi' },
+      { nom: 'Mariama Sow', email: 'mariama.bot@afrocards.com', pseudo: 'Mariama_Sow', pays: 'Guinée', avatarURL: 'https://api.dicebear.com/7.x/lorelei/png?seed=Mariama&backgroundColor=c0aede', pointsXP: 1200, niveau: 8, bio: 'Guinée 🇬🇳 | Nouvelle joueuse passionnée' },
+      { nom: 'Yemi Adeyemi', email: 'yemi.bot@afrocards.com', pseudo: 'Yemi_Adeyemi', pays: 'Nigeria', avatarURL: 'https://api.dicebear.com/7.x/notionists/png?seed=Yemi&backgroundColor=d1d4f9', pointsXP: 2100, niveau: 14, bio: 'Lagos vibes 🌴 | Knowledge is power' },
     ];
 
     for (const botData of botUsers) {
@@ -102,7 +102,7 @@ async function seed() {
           nom: botData.nom,
           email: botData.email,
           motDePasse: 'bot_password_hash_not_usable', // Pas de vraie connexion
-          typeUtilisateur: 'joueur',
+          typeUtilisateur: 'bot',
           statutCompte: 'actif'
         });
         console.log(`✅ Utilisateur bot créé: ${botData.nom}`);
@@ -114,12 +114,16 @@ async function seed() {
         defaults: {
           pseudo: botData.pseudo,
           pays: botData.pays,
+          nationalite: botData.pays,
           avatarURL: botData.avatarURL,
+          bio: botData.bio,
           pointsXP: botData.pointsXP,
+          totalXP: botData.pointsXP,
           niveau: botData.niveau,
           coins: Math.floor(botData.pointsXP / 10),
           vies: 5,
           niveauActuel: `Stage ${botData.niveau}`,
+          niveauStage: botData.niveau,
           maxNiveauDebloque: botData.niveau,
           partiesJouees: Math.floor(botData.pointsXP / 50),
           partiesGagnees: Math.floor(botData.pointsXP / 80)
@@ -130,8 +134,13 @@ async function seed() {
         console.log(`✅ Joueur bot créé: ${botData.pseudo}`);
       } else {
         await joueur.update({
+          avatarURL: botData.avatarURL,
+          bio: botData.bio,
+          nationalite: botData.pays,
           pointsXP: botData.pointsXP,
+          totalXP: botData.pointsXP,
           niveau: botData.niveau,
+          niveauStage: botData.niveau,
           niveauActuel: `Stage ${botData.niveau}`
         });
         console.log(`🔄 Joueur bot mis à jour: ${botData.pseudo}`);
