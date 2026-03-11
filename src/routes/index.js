@@ -24,6 +24,7 @@ const uploadRoutes = require('./upload.routes');
 const passwordRoutes = require('./password.routes');
 const resultRoutes = require('./result.routes');
 const challengeRoutes = require('./challenge.routes');
+const challengeSponsoriseRoutes = require('./challengeSponsorise.routes');
 
 // Utiliser les routes
 router.use('/auth', authRoutes);
@@ -48,6 +49,7 @@ router.use('/upload', uploadRoutes);
 router.use('/password', passwordRoutes);
 router.use('/results', resultRoutes);
 router.use('/challenges', challengeRoutes);
+router.use('/challenges-sponsorises', challengeSponsoriseRoutes);
 
 // Route de test API
 router.get('/health', (req, res) => {
