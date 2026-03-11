@@ -20,9 +20,11 @@ exports.saveResults = async (req, res) => {
       levelNumber 
     } = req.body;
 
+    console.log('📝 [SaveResults] Saving results - userId:', userId, 'score:', score, 'mode:', mode);
+
     // Récupérer le joueur
     const joueur = await Joueur.findOne({ 
-      where: { idUser: userId },
+      where: { idUtilisateur: userId },
       transaction 
     });
 
@@ -40,15 +42,20 @@ exports.saveResults = async (req, res) => {
     // Créer l'entrée de partie
     const partie = await Partie.create({
       idJoueur: joueur.idJoueur,
-      scoreObtenu: totalPoints,
+      score: totalPoints,
       bonnesReponses: score,
-      mauvaisesReponses: totalQuestions - score,
-      tempsTotal: 0, // À implémenter si nécessaire
-      datePartie: new Date(),
-      estTerminee: true,
+      totalQuestions: totalQuestions,
+      tempsTotal: 0,
+      dateDebut: new Date(),
+      dateFin: new Date(),
+      statut: 'termine',
       modeJeu: mode,
-      niveau: levelNumber || null
+      niveauStage: levelNumber || null,
+      xpGagne: xpGained,
+      coinsGagnes: coinsGained
     }, { transaction });
+
+    console.log('✅ [SaveResults] Game created - idPartie:', partie.idPartie, 'statut:', partie.statut, 'modeJeu:', partie.modeJeu);
 
     // Mettre à jour les XP et coins du joueur
     const oldXP = joueur.pointsXP || 0;
@@ -105,6 +112,8 @@ exports.saveResults = async (req, res) => {
     }, transaction);
 
     await transaction.commit();
+
+    console.log('✅ [SaveResults] Results saved successfully - partieId:', partie.idPartie, 'xpGained:', xpGained);
 
     res.json({
       success: true,
