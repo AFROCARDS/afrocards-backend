@@ -41,12 +41,28 @@ exports.saveResults = async (req, res) => {
 
     console.log('✅ [SaveResults] Joueur found:', joueur.pseudo, 'idJoueur:', joueur.idJoueur);
 
+    // Récupérer ou créer un quiz par défaut
+    let quiz = await Quiz.findOne({ transaction });
+    if (!quiz) {
+      console.log('⚠️ [SaveResults] No quiz found, creating default quiz...');
+      quiz = await Quiz.create({
+        titre: 'Quiz Général AfroCards',
+        description: 'Quiz de culture générale africaine',
+        difficulte: 'moyen',
+        langue: 'fr',
+        duree: 300,
+        statut: 'actif'
+      }, { transaction });
+      console.log('✅ [SaveResults] Default quiz created: idQuiz=' + quiz.idQuiz);
+    }
+
     // Calculer le pourcentage de réussite
     const percentage = totalQuestions > 0 ? (score / totalQuestions) * 100 : 0;
 
     // Créer l'entrée de partie
     const partie = await Partie.create({
       idJoueur: joueur.idJoueur,
+      idQuiz: quiz.idQuiz,
       score: totalPoints,
       bonnesReponses: score,
       totalQuestions: totalQuestions,
