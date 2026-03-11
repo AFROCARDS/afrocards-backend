@@ -134,7 +134,6 @@ exports.saveResults = async (req, res) => {
 
 /**
  * Historique complet de toute l'activité de jeu du joueur
- * Combine: Parties (Stage/Fiesta/etc) + Challenges sponsorisés
  * GET /api/results/history
  */
 exports.getResultsHistory = async (req, res) => {
@@ -142,13 +141,18 @@ exports.getResultsHistory = async (req, res) => {
     const userId = req.user.id;
     const { limit = 100, offset = 0 } = req.query;
 
+    console.log('📋 [History] Fetching for userId:', userId);
+
     const joueur = await Joueur.findOne({ where: { idUtilisateur: userId } });
     if (!joueur) {
+      console.error('❌ [History] Joueur not found for userId:', userId);
       return res.status(404).json({
         success: false,
         message: 'Joueur non trouvé'
       });
     }
+
+    console.log('✅ [History] Found joueur:', joueur.idJoueur, joueur.pseudo);
 
     // 1. Récupérer toutes les PARTIES (Stage, Fiesta, Duels, etc.)
     const parties = await Partie.findAll({
@@ -164,92 +168,44 @@ exports.getResultsHistory = async (req, res) => {
           required: false
         }
       ],
-      order: [['dateFin', 'DESC']],
-      raw: true,
-      attributes: {
-        include: [
-          ['idPartie', 'activityId'],
-          [sequelize.literal("'partie'"), 'type']
-        ]
-      }
+      order: [['dateFin', 'DESC'], ['dateDebut', 'DESC']],
+      limit: parseInt(limit),
+      offset: parseInt(offset)
     });
 
-    // 2. Récupérer toutes les VICTOIRES DE CHALLENGES SPONSORISÉS
-    // (via les trophées gagnés = challenges remportés)
-    const sponsoredChallenges = await sequelize.query(`
-      SELECT 
-        IT.id as activityId,
-        T.nom as nomChallenge,
-        T.description,
-        IT.dateObtention as dateFin,
-        COALESCE(SUBSTRING_INDEX(T.nom, '_', -1), 'Challenge') as challengeTitle,
-        'challenge_sponsorise' as type,
-        100 as bonnesReponses,
-        100 as totalQuestions,
-        0 as xpGagne,
-        0 as coinsGagnes,
-        P.entreprise as nomAdversaire,
-        P.logoURL as avatarAdversaire
-      FROM inventaire_trophees IT
-      JOIN trophees T ON IT.idTrophee = T.id_trophee
-      LEFT JOIN modes_jeu MJ ON T.nom LIKE CONCAT('Trophy_%', MJ.id_mode, '%')
-      LEFT JOIN partenaires P ON T.description LIKE CONCAT('%partenaire ', P.id_partenaire, '%')
-      WHERE IT.idJoueur = ?
-      ORDER BY IT.dateObtention DESC
-    `, { replacements: [joueur.idJoueur], type: sequelize.QueryTypes.SELECT });
+    console.log('📊 [History] Found', parties.length, 'terminated games for user');
 
     // Formatter les parties
-    const formattedParties = parties.map(partie => ({
-      activityId: partie.activityId,
-      type: 'partie',
-      modeJeu: partie.modeJeu || 'Stage',
-      datePartie: partie.dateFin || partie.dateDebut,
-      dateFin: partie.dateFin || partie.dateDebut,
-      bonnesReponses: partie.bonnesReponses || 0,
-      totalQuestions: partie.totalQuestions || 10,
-      xpGagne: partie.xpGagne || 0,
-      coinsGagnes: partie.coinsGagnes || 0,
-      niveauStage: partie.niveauStage || null,
-      nomAdversaire: partie.nomAdversaire || partie.adversaire?.pseudo || null,
-      avatarAdversaire: partie.adversaire?.avatarURL || null,
-      idAdversaire: partie.idAdversaire || null
-    }));
-
-    // Formatter les challenges sponsorisés
-    const formattedChallenges = sponsoredChallenges.map(cs => ({
-      activityId: cs.activityId,
-      type: 'challenge_sponsorise',
-      modeJeu: 'Challenge Sponsorisé',
-      datePartie: cs.dateFin,
-      dateFin: cs.dateFin,
-      bonnesReponses: 100,
-      totalQuestions: 100,
-      xpGagne: 0,
-      coinsGagnes: 0,
-      niveauStage: null,
-      nomAdversaire: cs.nomAdversaire || 'Partenaire',
-      avatarAdversaire: cs.avatarAdversaire || null,
-      challengeTitle: cs.challengeTitle
-    }));
-
-    // Combiner et trier par date décroissante
-    const allActivities = [...formattedParties, ...formattedChallenges].sort((a, b) => {
-      const dateA = new Date(a.dateFin || 0);
-      const dateB = new Date(b.dateFin || 0);
-      return dateB - dateA;
+    const formattedParties = parties.map(partie => {
+      const obj = partie.toJSON();
+      return {
+        activityId: obj.idPartie,
+        type: 'partie',
+        modeJeu: obj.modeJeu || 'Stage',
+        datePartie: obj.dateFin || obj.dateDebut,
+        dateFin: obj.dateFin || obj.dateDebut,
+        bonnesReponses: obj.bonnesReponses || 0,
+        totalQuestions: obj.totalQuestions || 10,
+        xpGagne: obj.xpGagne || 0,
+        coinsGagnes: obj.coinsGagnes || 0,
+        niveauStage: obj.niveauStage || null,
+        nomAdversaire: obj.nomAdversaire || obj.adversaire?.pseudo || null,
+        avatarAdversaire: obj.adversaire?.avatarURL || null,
+        idAdversaire: obj.idAdversaire || null
+      };
     });
 
-    // Appliquer la pagination
-    const paginatedActivities = allActivities.slice(offset, offset + parseInt(limit));
+    console.log('✅ [History] Formatted', formattedParties.length, 'activities');
 
     res.json({
       success: true,
-      count: allActivities.length,
-      data: paginatedActivities
+      count: formattedParties.length,
+      data: formattedParties
     });
 
   } catch (error) {
-    console.error('Erreur getResultsHistory:', error);
+    console.error('❌ [History] Error:', error.message);
+    console.error('❌ [History] Stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la récupération de l\'historique',
