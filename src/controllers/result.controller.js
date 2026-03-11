@@ -1,4 +1,4 @@
-const { Partie, Joueur, Niveau, Badge, InventaireBadge, HistoriqueTransaction, Notification, sequelize } = require('../models');
+const { Partie, Joueur, Niveau, Badge, InventaireBadge, HistoriqueTransaction, Notification, Quiz, sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 /**
