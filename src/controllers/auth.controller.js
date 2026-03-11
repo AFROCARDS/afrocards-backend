@@ -71,7 +71,7 @@ class AuthController {
             include: [{
               model: Badge,
               as: 'badge',
-              attributes: ['idBadge', 'nom', 'description', 'icone', 'conditionType', 'conditionValeur', 'recompenseXP']
+              attributes: ['idBadge', 'nom', 'description', 'icone', 'couleur', 'conditionType', 'conditionValeur', 'recompenseXP']
             }],
             order: [[{ model: Badge, as: 'badge' }, 'recompenseXP', 'DESC']]
           });

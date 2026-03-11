@@ -31,6 +31,11 @@ const Badge = sequelize.define('Badge', {
     allowNull: false,
     comment: 'La valeur à atteindre pour débloquer (ex: 1000)'
   },
+  couleur: {
+    type: DataTypes.STRING(20),
+    allowNull: true,
+    defaultValue: '#78909C'
+  },
   recompenseXP: {
     type: DataTypes.INTEGER,
     defaultValue: 0
