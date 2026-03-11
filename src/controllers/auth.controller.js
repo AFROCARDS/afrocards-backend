@@ -41,7 +41,7 @@ class AuthController {
   // Obtenir le profil de l'utilisateur connecté
   async getProfil(req, res) {
     try {
-      const { Utilisateur, Joueur, Partenaire } = require('../models');
+      const { Utilisateur, Joueur, Partenaire, Badge, InventaireBadge } = require('../models');
       
       const utilisateur = await Utilisateur.findByPk(req.user.id, {
         attributes: { exclude: ['motDePasse'] }
@@ -56,10 +56,36 @@ class AuthController {
 
       // Récupérer le profil spécifique
       let profil = null;
+      let badges = [];
+      let badgePrincipal = null;
+      
       if (utilisateur.typeUtilisateur === 'joueur') {
         profil = await Joueur.findOne({
           where: { idUtilisateur: utilisateur.idUtilisateur }
         });
+        
+        // Récupérer les badges du joueur
+        if (profil) {
+          const inventaireBadges = await InventaireBadge.findAll({
+            where: { idJoueur: profil.idJoueur },
+            include: [{
+              model: Badge,
+              as: 'badge',
+              attributes: ['idBadge', 'nom', 'description', 'icone', 'conditionType', 'conditionValeur', 'recompenseXP']
+            }],
+            order: [[{ model: Badge, as: 'badge' }, 'recompenseXP', 'DESC']]
+          });
+          
+          badges = inventaireBadges.map(ib => ({
+            ...ib.badge.toJSON(),
+            dateObtention: ib.dateObtention
+          }));
+          
+          // Badge principal = celui avec le plus de recompenseXP
+          if (badges.length > 0) {
+            badgePrincipal = badges[0];
+          }
+        }
       } else if (utilisateur.typeUtilisateur === 'partenaire') {
         profil = await Partenaire.findOne({
           where: { idUtilisateur: utilisateur.idUtilisateur }
@@ -70,10 +96,13 @@ class AuthController {
         success: true,
         data: {
           utilisateur,
-          profil
+          profil,
+          badges,
+          badgePrincipal
         }
       });
     } catch (error) {
+      console.error('Erreur getProfil:', error);
       res.status(500).json({
         success: false,
         message: error.message

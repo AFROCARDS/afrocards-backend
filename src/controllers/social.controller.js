@@ -1,4 +1,4 @@
-const { Joueur, Message, Notification, NotificationParametre, Signalement, SignalementQuestion, Ami, Trophee, sequelize } = require('../models');
+const { Joueur, Message, Notification, NotificationParametre, Signalement, SignalementQuestion, Ami, Trophee, Badge, InventaireBadge, sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 // Helper pour récupérer l'ID joueur courant
@@ -711,6 +711,12 @@ exports.getProfilJoueur = async (req, res) => {
           as: 'trophees',
           attributes: ['idTrophee', 'nom', 'description', 'icone', 'rareté'],
           through: { attributes: ['dateObtention'] }
+        },
+        {
+          model: Badge,
+          as: 'badges',
+          attributes: ['idBadge', 'nom', 'description', 'icone', 'couleur', 'recompenseXP'],
+          through: { attributes: ['dateObtention'] }
         }
       ]
     });
@@ -754,21 +760,16 @@ exports.getProfilJoueur = async (req, res) => {
       }
     });
 
-    // Calculer le badge basé sur les XP
-    const getBadge = (xp) => {
-      if (xp >= 10000) return { nom: 'Légende', couleur: '#FFD700' };
-      if (xp >= 7500) return { nom: 'Maître', couleur: '#E040FB' };
-      if (xp >= 5000) return { nom: 'Diamant', couleur: '#00BCD4' };
-      if (xp >= 3000) return { nom: 'Platine', couleur: '#9C27B0' };
-      if (xp >= 2000) return { nom: 'Or', couleur: '#FFB74D' };
-      if (xp >= 1000) return { nom: 'Argent', couleur: '#BDBDBD' };
-      if (xp >= 500) return { nom: 'Bronze', couleur: '#CD7F32' };
-      if (xp >= 100) return { nom: 'Débutant', couleur: '#78909C' };
-      return { nom: 'Novice', couleur: '#78909C' };
-    };
-
     const joueurData = joueur.toJSON();
     const totalXP = joueurData.totalXP || joueurData.pointsXP || 0;
+
+    // Déterminer le badge principal (celui avec le plus de recompenseXP)
+    const badges = joueurData.badges || [];
+    let badgePrincipal = null;
+    if (badges.length > 0) {
+      const trieBadges = [...badges].sort((a, b) => (b.recompenseXP || 0) - (a.recompenseXP || 0));
+      badgePrincipal = trieBadges[0];
+    }
 
     // Définir le statut d'amitié
     let statutAmitie = 'none'; // Pas de relation
@@ -804,7 +805,8 @@ exports.getProfilJoueur = async (req, res) => {
         partiesJouees: joueurData.partiesJouees,
         partiesGagnees: joueurData.partiesGagnees,
         dateInscription: joueurData.dateInscription,
-        badge: getBadge(totalXP),
+        badge: badgePrincipal,
+        badges: badges,
         nombreAmis: nombreAmis,
         nombreTrophees: joueurData.trophees?.length || 0,
         trophees: joueurData.trophees || [],
