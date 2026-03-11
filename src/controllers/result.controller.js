@@ -99,7 +99,9 @@ exports.saveResults = async (req, res) => {
       percentage,
       mode,
       levelNumber,
-      partiesJouees: joueur.partiesJouees + 1
+      partiesJouees: joueur.partiesJouees + 1,
+      totalXP: newXP,
+      stageLevel: joueur.niveauStage || 1
     }, transaction);
 
     await transaction.commit();
@@ -289,20 +291,35 @@ async function checkAndUnlockBadges(joueur, stats, transaction) {
       if (unlockedIds.includes(badge.idBadge)) continue;
 
       let shouldUnlock = false;
-      const condition = badge.conditionObtention?.toLowerCase() || '';
+      const conditionType = badge.conditionType?.toLowerCase() || '';
+      const conditionValeur = badge.conditionValeur || 0;
 
-      // Vérifier les conditions
-      if (condition.includes('premiere_partie') && stats.partiesJouees === 1) {
-        shouldUnlock = true;
-      }
-      if (condition.includes('10_parties') && stats.partiesJouees >= 10) {
-        shouldUnlock = true;
-      }
-      if (condition.includes('score_parfait') && stats.percentage === 100) {
-        shouldUnlock = true;
-      }
-      if (condition.includes('niveau_10') && stats.levelNumber >= 10) {
-        shouldUnlock = true;
+      // Vérifier les conditions selon le type
+      switch (conditionType) {
+        case 'parties_jouees':
+          if (stats.partiesJouees >= conditionValeur) {
+            shouldUnlock = true;
+          }
+          break;
+        case 'xp_total':
+          if ((stats.totalXP || 0) >= conditionValeur) {
+            shouldUnlock = true;
+          }
+          break;
+        case 'quiz_parfaits':
+          if (stats.percentage === 100) {
+            // Incrémenter le compteur de quiz parfaits côté stats si nécessaire
+            const quizParfaits = stats.quizParfaits || (stats.percentage === 100 ? 1 : 0);
+            if (quizParfaits >= conditionValeur) {
+              shouldUnlock = true;
+            }
+          }
+          break;
+        case 'niveau_stage':
+          if ((stats.levelNumber || stats.stageLevel || 1) >= conditionValeur) {
+            shouldUnlock = true;
+          }
+          break;
       }
 
       if (shouldUnlock) {
