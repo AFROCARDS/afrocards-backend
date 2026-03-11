@@ -18,32 +18,32 @@ async function seedChallengesSponsorisees() {
     const partenairesData = [
       {
         email: 'google@partner.com',
-        mot_de_passe: 'hashedPassword123', // À remplacer par du vrai hash
-        role: 'partenaire',
+        motDePasse: 'hashedPassword123',
+        typeUtilisateur: 'partenaire',
         nom: 'Google'
       },
       {
         email: 'microsoft@partner.com',
-        mot_de_passe: 'hashedPassword123',
-        role: 'partenaire',
+        motDePasse: 'hashedPassword123',
+        typeUtilisateur: 'partenaire',
         nom: 'Microsoft'
       },
       {
         email: 'apple@partner.com',
-        mot_de_passe: 'hashedPassword123',
-        role: 'partenaire',
+        motDePasse: 'hashedPassword123',
+        typeUtilisateur: 'partenaire',
         nom: 'Apple'
       },
       {
         email: 'amazon@partner.com',
-        mot_de_passe: 'hashedPassword123',
-        role: 'partenaire',
+        motDePasse: 'hashedPassword123',
+        typeUtilisateur: 'partenaire',
         nom: 'Amazon'
       },
       {
         email: 'netflix@partner.com',
-        mot_de_passe: 'hashedPassword123',
-        role: 'partenaire',
+        motDePasse: 'hashedPassword123',
+        typeUtilisateur: 'partenaire',
         nom: 'Netflix'
       }
     ];
