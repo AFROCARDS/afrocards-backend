@@ -1,4 +1,4 @@
-const { Partie, Joueur, Niveau, Badge, InventaireBadge, HistoriqueTransaction, sequelize } = require('../models');
+const { Partie, Joueur, Niveau, Badge, InventaireBadge, HistoriqueTransaction, Notification, sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 /**
@@ -327,6 +327,16 @@ async function checkAndUnlockBadges(joueur, stats, transaction) {
           idJoueur: joueur.idJoueur,
           idBadge: badge.idBadge,
           dateObtention: new Date()
+        }, { transaction });
+
+        // Créer une notification pour le badge débloqué
+        await Notification.create({
+          idJoueur: joueur.idJoueur,
+          type: 'badge',
+          titre: '🏅 Nouveau badge débloqué !',
+          contenu: `Félicitations ! Vous avez obtenu le badge "${badge.nom}" : ${badge.description}`,
+          canal: 'in-app',
+          estLue: false
         }, { transaction });
 
         unlockedBadges.push({
