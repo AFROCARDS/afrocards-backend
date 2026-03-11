@@ -715,7 +715,6 @@ exports.getProfilJoueur = async (req, res) => {
         {
           model: Badge,
           as: 'badges',
-          attributes: ['idBadge', 'nom', 'description', 'icone', 'couleur', 'recompenseXP'],
           through: { attributes: ['dateObtention'] }
         }
       ]

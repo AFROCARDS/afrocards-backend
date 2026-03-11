@@ -70,8 +70,7 @@ class AuthController {
             where: { idJoueur: profil.idJoueur },
             include: [{
               model: Badge,
-              as: 'badge',
-              attributes: ['idBadge', 'nom', 'description', 'icone', 'couleur', 'recompenseXP']
+              as: 'badge'
             }]
           });
           
