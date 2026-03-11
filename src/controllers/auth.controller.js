@@ -71,15 +71,17 @@ class AuthController {
             include: [{
               model: Badge,
               as: 'badge',
-              attributes: ['idBadge', 'nom', 'description', 'icone', 'couleur', 'conditionType', 'conditionValeur', 'recompenseXP']
-            }],
-            order: [[{ model: Badge, as: 'badge' }, 'recompenseXP', 'DESC']]
+              attributes: ['idBadge', 'nom', 'description', 'icone', 'couleur', 'recompenseXP']
+            }]
           });
           
-          badges = inventaireBadges.map(ib => ({
-            ...ib.badge.toJSON(),
-            dateObtention: ib.dateObtention
-          }));
+          badges = inventaireBadges
+            .filter(ib => ib.badge)
+            .map(ib => ({
+              ...ib.badge.toJSON(),
+              dateObtention: ib.dateObtention
+            }))
+            .sort((a, b) => (b.recompenseXP || 0) - (a.recompenseXP || 0));
           
           // Badge principal = celui avec le plus de recompenseXP
           if (badges.length > 0) {
