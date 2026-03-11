@@ -20,7 +20,9 @@ exports.saveResults = async (req, res) => {
       levelNumber 
     } = req.body;
 
-    console.log('📝 [SaveResults] Saving results - userId:', userId, 'score:', score, 'mode:', mode);
+    console.log('✅ [SaveResults] ENDPOINT CALLED');
+    console.log('📝 [SaveResults] userId:', userId, 'token user:', req.user.email);
+    console.log('📝 [SaveResults] Body:', { score, totalQuestions, totalPoints, xpGained, coinsGained, mode, levelNumber });
 
     // Récupérer le joueur
     const joueur = await Joueur.findOne({ 
@@ -29,12 +31,15 @@ exports.saveResults = async (req, res) => {
     });
 
     if (!joueur) {
+      console.log('❌ [SaveResults] Joueur NOT FOUND for idUtilisateur:', userId);
       await transaction.rollback();
       return res.status(404).json({
         success: false,
         message: 'Joueur non trouvé'
       });
     }
+
+    console.log('✅ [SaveResults] Joueur found:', joueur.pseudo, 'idJoueur:', joueur.idJoueur);
 
     // Calculer le pourcentage de réussite
     const percentage = totalQuestions > 0 ? (score / totalQuestions) * 100 : 0;
@@ -113,7 +118,8 @@ exports.saveResults = async (req, res) => {
 
     await transaction.commit();
 
-    console.log('✅ [SaveResults] Results saved successfully - partieId:', partie.idPartie, 'xpGained:', xpGained);
+    console.log('✅ [SaveResults] Transaction COMMITTED successfully');
+    console.log('✅ [SaveResults] RESPONSE: partieId=' + partie.idPartie + ', xp=' + xpGained + ', coins=' + coinsGained);
 
     res.json({
       success: true,
@@ -132,7 +138,8 @@ exports.saveResults = async (req, res) => {
 
   } catch (error) {
     await transaction.rollback();
-    console.error('Erreur saveResults:', error);
+    console.error('❌ [SaveResults] ERROR:', error.message);
+    console.error('❌ [SaveResults] Stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la sauvegarde des résultats',
