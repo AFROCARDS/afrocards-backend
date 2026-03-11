@@ -72,77 +72,10 @@ async function seedHistorique() {
 
     const quizId = quiz.idQuiz;
 
-    console.log(`\n📊 Création de l'historique pour ${joueurs.length} joueur(s)...`);
-
-    // Modes de jeu disponibles
-    const modes = ['Stage', 'Fiesta', 'Défi', 'Challenge'];
-    const challenges = ['MTN-AGOJIE', 'Orange Money', 'Moov Africa', 'Canal+'];
-
-    for (const joueur of joueurs) {
-      console.log(`\n👤 Joueur: ${joueur.pseudo}`);
-
-      // Vérifier si le joueur a déjà un historique
-      const existingCount = await Partie.count({ where: { idJoueur: joueur.idJoueur } });
-      if (existingCount > 5) {
-        console.log(`  ⏭️ A déjà ${existingCount} parties, on passe`);
-        continue;
-      }
-
-      // Créer 8-12 parties par joueur
-      const nbParties = 8 + Math.floor(Math.random() * 5);
-      
-      for (let i = 0; i < nbParties; i++) {
-        const mode = modes[Math.floor(Math.random() * modes.length)];
-        const isChallenge = mode === 'Challenge';
-        const isDuel = mode === 'Défi';
-        
-        // Sélectionner un adversaire pour les duels
-        let adversaire = null;
-        let nomAdversaire = null;
-        
-        if (isDuel && bots.length > 0) {
-          adversaire = bots[Math.floor(Math.random() * bots.length)];
-          nomAdversaire = adversaire.pseudo;
-        } else if (isChallenge) {
-          nomAdversaire = challenges[Math.floor(Math.random() * challenges.length)];
-        }
-
-        const bonnesReponses = Math.floor(Math.random() * 11); // 0-10
-        const totalQuestions = 10;
-        const score = bonnesReponses * 10;
-        const niveauStage = mode === 'Stage' ? Math.floor(Math.random() * 5) + 1 : null;
-        
-        // XP et coins basés sur la performance
-        const xpGagne = isDuel ? 200 : (isChallenge ? 100 : 20 * bonnesReponses);
-        const coinsGagnes = isDuel ? 75 : (isChallenge ? 1000 : 5 * bonnesReponses);
-
-        // Date aléatoire dans les 30 derniers jours
-        const datePartie = new Date();
-        datePartie.setDate(datePartie.getDate() - Math.floor(Math.random() * 30));
-
-        await Partie.create({
-          idJoueur: joueur.idJoueur,
-          idQuiz: quizId,
-          modeJeu: mode,
-          score,
-          bonnesReponses,
-          totalQuestions,
-          xpGagne,
-          coinsGagnes,
-          niveauStage,
-          idAdversaire: adversaire?.idJoueur || null,
-          nomAdversaire,
-          dateDebut: datePartie,
-          dateFin: new Date(datePartie.getTime() + 5 * 60 * 1000), // +5 min
-          statut: 'termine',
-          progression: 100
-        });
-      }
-
-      console.log(`  ✅ ${nbParties} parties créées`);
-    }
-
-    console.log('\n✅ Historique créé avec succès!');
+    // ⚠️ Les données d'historique ne sont plus ajoutées ici
+    // Elles seront créées uniquement par les vraies parties jouées
+    console.log('\n📊 Colonnes de la table parties sont à jour');
+    console.log('✅ L\'historique sera aliementé uniquement par les vraies parties jouées');
 
   } catch (error) {
     console.error('❌ Erreur:', error);
