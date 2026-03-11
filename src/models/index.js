@@ -12,6 +12,7 @@ const Partenaire = require('./Partenaire');
 
 // 2. Contenu (Quiz)
 const Categorie = require('./Categorie');
+const SousCategorie = require('./SousCategorie');
 const Quiz = require('./Quiz');
 const Question = require('./Question');
 const Reponse = require('./Reponse');
@@ -114,6 +115,16 @@ const defineAssociations = () => {
     through: 'quiz_categories',
     foreignKey: 'idCategorie',
     otherKey: 'idQuiz'
+  });
+
+  // 6b. CATÉGORIE ↔ SOUS-CATÉGORIE (1:N)
+  Categorie.hasMany(SousCategorie, {
+    foreignKey: 'idCategorie',
+    as: 'sousCategories',
+    onDelete: 'CASCADE'
+  });
+  SousCategorie.belongsTo(Categorie, {
+    foreignKey: 'idCategorie'
   });
 
   // 7. QUESTION ↔ CATÉGORIE (N:N)
@@ -464,6 +475,7 @@ module.exports = {
   Partenaire,
   // Modèles Quiz
   Categorie,
+  SousCategorie,
   Quiz,
   Question,
   Reponse,

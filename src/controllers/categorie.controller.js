@@ -1,4 +1,4 @@
-const { Categorie, Quiz } = require('../models');
+const { Categorie, SousCategorie, Quiz } = require('../models');
 
 // 1. Créer une catégorie
 exports.createCategorie = async (req, res) => {
@@ -28,10 +28,15 @@ exports.createCategorie = async (req, res) => {
   }
 };
 
-// 2. Récupérer toutes les catégories
+// 2. Récupérer toutes les catégories avec leurs sous-catégories
 exports.getAllCategories = async (req, res) => {
   try {
     const categories = await Categorie.findAll({
+      include: [{
+        model: SousCategorie,
+        as: 'sousCategories',
+        attributes: ['idSousCategorie', 'nom', 'description', 'icone']
+      }],
       order: [['nom', 'ASC']]
     });
 
@@ -45,17 +50,24 @@ exports.getAllCategories = async (req, res) => {
   }
 };
 
-// 3. Récupérer une catégorie par ID (avec ses Quiz associés)
+// 3. Récupérer une catégorie par ID (avec ses Quiz associés et sous-catégories)
 exports.getCategorieById = async (req, res) => {
   try {
     const { id } = req.params;
 
     const categorie = await Categorie.findByPk(id, {
-      include: [{
-        model: Quiz,
-        attributes: ['idQuiz', 'titre', 'difficulte', 'statut'],
-        through: { attributes: [] } // Masquer la table de liaison
-      }]
+      include: [
+        {
+          model: SousCategorie,
+          as: 'sousCategories',
+          attributes: ['idSousCategorie', 'nom', 'description', 'icone']
+        },
+        {
+          model: Quiz,
+          attributes: ['idQuiz', 'titre', 'difficulte', 'statut'],
+          through: { attributes: [] } // Masquer la table de liaison
+        }
+      ]
     });
 
     if (!categorie) {
