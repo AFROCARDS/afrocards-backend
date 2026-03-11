@@ -133,13 +133,14 @@ exports.saveResults = async (req, res) => {
 };
 
 /**
- * Historique des résultats du joueur
+ * Historique complet de toute l'activité de jeu du joueur
+ * Combine: Parties (Stage/Fiesta/etc) + Challenges sponsorisés
  * GET /api/results/history
  */
 exports.getResultsHistory = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { limit = 50, offset = 0 } = req.query;
+    const { limit = 100, offset = 0 } = req.query;
 
     const joueur = await Joueur.findOne({ where: { idUtilisateur: userId } });
     if (!joueur) {
@@ -149,7 +150,8 @@ exports.getResultsHistory = async (req, res) => {
       });
     }
 
-    const parties = await Partie.findAndCountAll({
+    // 1. Récupérer toutes les PARTIES (Stage, Fiesta, Duels, etc.)
+    const parties = await Partie.findAll({
       where: { 
         idJoueur: joueur.idJoueur,
         statut: 'termine'
@@ -162,31 +164,88 @@ exports.getResultsHistory = async (req, res) => {
           required: false
         }
       ],
-      order: [['dateFin', 'DESC'], ['dateDebut', 'DESC']],
-      limit: parseInt(limit),
-      offset: parseInt(offset)
+      order: [['dateFin', 'DESC']],
+      raw: true,
+      attributes: {
+        include: [
+          ['idPartie', 'activityId'],
+          [sequelize.literal("'partie'"), 'type']
+        ]
+      }
     });
 
-    // Formatter les données pour le frontend
-    const formattedData = parties.rows.map(partie => ({
-      idPartie: partie.idPartie,
+    // 2. Récupérer toutes les VICTOIRES DE CHALLENGES SPONSORISÉS
+    // (via les trophées gagnés = challenges remportés)
+    const sponsoredChallenges = await sequelize.query(`
+      SELECT 
+        IT.id as activityId,
+        T.nom as nomChallenge,
+        T.description,
+        IT.dateObtention as dateFin,
+        COALESCE(SUBSTRING_INDEX(T.nom, '_', -1), 'Challenge') as challengeTitle,
+        'challenge_sponsorise' as type,
+        100 as bonnesReponses,
+        100 as totalQuestions,
+        0 as xpGagne,
+        0 as coinsGagnes,
+        P.entreprise as nomAdversaire,
+        P.logoURL as avatarAdversaire
+      FROM inventaire_trophees IT
+      JOIN trophees T ON IT.idTrophee = T.id_trophee
+      LEFT JOIN modes_jeu MJ ON T.nom LIKE CONCAT('Trophy_%', MJ.id_mode, '%')
+      LEFT JOIN partenaires P ON T.description LIKE CONCAT('%partenaire ', P.id_partenaire, '%')
+      WHERE IT.idJoueur = ?
+      ORDER BY IT.dateObtention DESC
+    `, { replacements: [joueur.idJoueur], type: sequelize.QueryTypes.SELECT });
+
+    // Formatter les parties
+    const formattedParties = parties.map(partie => ({
+      activityId: partie.activityId,
+      type: 'partie',
       modeJeu: partie.modeJeu || 'Stage',
       datePartie: partie.dateFin || partie.dateDebut,
-      score: partie.score || 0,
+      dateFin: partie.dateFin || partie.dateDebut,
       bonnesReponses: partie.bonnesReponses || 0,
       totalQuestions: partie.totalQuestions || 10,
       xpGagne: partie.xpGagne || 0,
       coinsGagnes: partie.coinsGagnes || 0,
       niveauStage: partie.niveauStage || null,
-      nomAdversaire: partie.adversaire?.pseudo || partie.nomAdversaire || null,
+      nomAdversaire: partie.nomAdversaire || partie.adversaire?.pseudo || null,
       avatarAdversaire: partie.adversaire?.avatarURL || null,
       idAdversaire: partie.idAdversaire || null
     }));
 
+    // Formatter les challenges sponsorisés
+    const formattedChallenges = sponsoredChallenges.map(cs => ({
+      activityId: cs.activityId,
+      type: 'challenge_sponsorise',
+      modeJeu: 'Challenge Sponsorisé',
+      datePartie: cs.dateFin,
+      dateFin: cs.dateFin,
+      bonnesReponses: 100,
+      totalQuestions: 100,
+      xpGagne: 0,
+      coinsGagnes: 0,
+      niveauStage: null,
+      nomAdversaire: cs.nomAdversaire || 'Partenaire',
+      avatarAdversaire: cs.avatarAdversaire || null,
+      challengeTitle: cs.challengeTitle
+    }));
+
+    // Combiner et trier par date décroissante
+    const allActivities = [...formattedParties, ...formattedChallenges].sort((a, b) => {
+      const dateA = new Date(a.dateFin || 0);
+      const dateB = new Date(b.dateFin || 0);
+      return dateB - dateA;
+    });
+
+    // Appliquer la pagination
+    const paginatedActivities = allActivities.slice(offset, offset + parseInt(limit));
+
     res.json({
       success: true,
-      count: parties.count,
-      data: formattedData
+      count: allActivities.length,
+      data: paginatedActivities
     });
 
   } catch (error) {
