@@ -330,10 +330,12 @@ const defineAssociations = () => {
 
   // 19. INVENTAIREBADGE ↔ BADGE (1:N)
   InventaireBadge.belongsTo(Badge, {
-    foreignKey: 'idBadge'
+    foreignKey: 'idBadge',
+    as: 'badge'
   });
   Badge.hasMany(InventaireBadge, {
-    foreignKey: 'idBadge'
+    foreignKey: 'idBadge',
+    as: 'inventaireBadges'
   });
 
   // 20. INVENTAIRETROPHEE ↔ TROPHEE (1:N)
