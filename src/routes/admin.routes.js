@@ -260,5 +260,170 @@ router.put('/users/:id/status', adminValidator.updateStatus, validate, adminCont
  */
 router.put('/users/:id/role', adminValidator.updateRole, validate, adminController.updateUserRole);
 
+// ============================================
+// ROUTES STATISTIQUES AVANCÉES
+// ============================================
+
+/**
+ * @swagger
+ * /admin/stats/users-evolution:
+ *   get:
+ *     summary: Evolution des inscriptions sur les derniers mois
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: months
+ *         schema:
+ *           type: integer
+ *           default: 12
+ *         description: Nombre de mois à récupérer
+ *     responses:
+ *       200:
+ *         description: Données récupérées avec succès
+ */
+router.get('/stats/users-evolution', adminController.getUsersEvolution);
+
+/**
+ * @swagger
+ * /admin/stats/parties-evolution:
+ *   get:
+ *     summary: Evolution des parties sur les derniers jours
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: days
+ *         schema:
+ *           type: integer
+ *           default: 30
+ *         description: Nombre de jours à récupérer
+ *     responses:
+ *       200:
+ *         description: Données récupérées avec succès
+ */
+router.get('/stats/parties-evolution', adminController.getPartiesEvolution);
+
+/**
+ * @swagger
+ * /admin/stats/questions-by-category:
+ *   get:
+ *     summary: Répartition des questions par catégorie
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Données récupérées avec succès
+ */
+router.get('/stats/questions-by-category', adminController.getQuestionsByCategory);
+
+/**
+ * @swagger
+ * /admin/stats/top-players:
+ *   get:
+ *     summary: Top joueurs par score
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Nombre de joueurs à récupérer
+ *     responses:
+ *       200:
+ *         description: Données récupérées avec succès
+ */
+router.get('/stats/top-players', adminController.getTopPlayers);
+
+/**
+ * @swagger
+ * /admin/stats/signalements:
+ *   get:
+ *     summary: Statistiques des signalements
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Données récupérées avec succès
+ */
+router.get('/stats/signalements', adminController.getSignalementsStats);
+
+/**
+ * @swagger
+ * /admin/stats/users-distribution:
+ *   get:
+ *     summary: Répartition des utilisateurs par type
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Données récupérées avec succès
+ */
+router.get('/stats/users-distribution', adminController.getUsersDistribution);
+
+/**
+ * @swagger
+ * /admin/stats/players-by-country:
+ *   get:
+ *     summary: Répartition des joueurs par pays
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Nombre de pays à récupérer
+ *     responses:
+ *       200:
+ *         description: Données récupérées avec succès
+ */
+router.get('/stats/players-by-country', adminController.getPlayersByCountry);
+
+/**
+ * @swagger
+ * /admin/stats/recent-activity:
+ *   get:
+ *     summary: Activité récente (inscriptions et parties)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Nombre d'éléments à récupérer
+ *     responses:
+ *       200:
+ *         description: Données récupérées avec succès
+ */
+router.get('/stats/recent-activity', adminController.getRecentActivity);
+
+/**
+ * @swagger
+ * /admin/stats/challenges-sponsorises:
+ *   get:
+ *     summary: Statistiques des challenges sponsorisés
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Données récupérées avec succès
+ */
+router.get('/stats/challenges-sponsorises', adminController.getChallengesSponsorisesStats);
+
 module.exports = router;
 
