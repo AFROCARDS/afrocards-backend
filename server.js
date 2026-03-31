@@ -15,7 +15,10 @@ if (process.env.NODE_ENV === 'development') {
 
 // Middlewares
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*'
+  origin: process.env.NODE_ENV === 'production' 
+    ? process.env.CORS_ORIGIN 
+    : true, // Accepte tous les origines en développement
+  credentials: true
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
